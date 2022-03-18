@@ -1,0 +1,14 @@
+{
+  "metadata": {
+    "log_level": "DEBUG",
+    "log_path": null
+  },
+  "data": {
+    "tag": "1", "class": "Action", "delay": 0.1, "jobs": 3,
+    "executor": "ProcessPoolExecutor", "workers": 2,
+    "routine": "broadcast", "sub_actions": [
+      {"tag": "1", "class": "Action"},
+      {"tag": "2", "class": "Action"},
+      {"tag": "3", "class": "Action"}]
+  }
+}
