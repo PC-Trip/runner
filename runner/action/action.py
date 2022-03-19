@@ -1,4 +1,4 @@
-"""Base class for all concurrent actions (processes)
+"""Base class for all actions (processes)
 
 0. TODO Track proposal 3148! https://www.python.org/dev/peps/pep-3148/
 1. About python concurrency https://docs.python.org/3/library/concurrency.html
@@ -172,6 +172,53 @@ class Action:
 
     def post_call(self, *args, **kwargs):
         pass
+
+    def get_routes(self, routes=None, prev_action=None, route=':', sep='.', def_tag=''):
+        """Recursively get routes from the action to other activities
+
+        Routes are concatenated from action tags and separator.
+
+        Args:
+            routes (dict): routes from action to other actions
+            prev_action (Action): previous visited action or None at the start
+            route (str): current route
+            sep (str): separator between visited actions in the route
+            def_tag (str): default tag if action tag is None
+                or action is a super action
+
+        Returns:
+            dict: routes from action to other actions
+        """
+        routes = {} if routes is None else routes
+        if prev_action is None:  # This action is the root node
+            if route in routes:
+                logging.warning(f'Routing "{route}" conflict! Set tags to actions'
+                                f'to resolve it: {routes[route]} {self}')
+            routes[route] = self
+            if self.sup_action is not None:
+                routes = self.sup_action.get_routes(routes, self, route, sep, def_tag)
+            for s in self.sub_actions:
+                routes = s.get_routes(routes, self, route, sep, def_tag)
+        elif prev_action.sup_action == self:  # This action is the super action of previous
+            route = sep.join([def_tag, route])
+            if route in routes:
+                logging.warning(f'Routing "{route}" conflict! Set tags to actions'
+                                f'to resolve it: {routes[route]} {self}')
+            routes[route] = self
+            if self.sup_action is not None:
+                routes = self.sup_action.get_routes(routes, self, route, sep, def_tag)
+            for s in self.sub_actions:
+                if s != prev_action:
+                    routes = s.get_routes(routes, self, route, sep, def_tag)
+        else:  # This action is a sub action of previous
+            route = sep.join([route, def_tag if self.tag is None else self.tag])
+            if route in routes:
+                logging.warning(f'Routing "{route}" conflict! Set tags to actions'
+                                f'to resolve it: {routes[route]} {self}')
+            routes[route] = self
+            for s in self.sub_actions:
+                routes = s.get_routes(routes, self, route, sep, def_tag)
+        return routes
 
     def __call__(self, *args, **kwargs):
         stack_trace = [self]

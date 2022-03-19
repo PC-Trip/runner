@@ -5,8 +5,9 @@ from pathlib import Path
 import pytest
 
 
-@pytest.fixture
-def run(request):
+@pytest.fixture(autouse=True)
+def run(request, monkeypatch):
+    monkeypatch.chdir(request.fspath.dirname)
     python = sys.executable
     cfd = Path(__file__).parent.resolve()
     root = cfd.parent

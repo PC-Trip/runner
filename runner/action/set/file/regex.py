@@ -6,18 +6,19 @@
 import re
 from pathlib import Path
 
-from runner.action.set.set import Set
+from runner.action.set.file.file import File
 
 
-class RegexFile(Set):
-    def __init__(self, regex, path, value_type='str', read_type='line',
-                 num='last', **kwargs):
+class Regex(File):
+    def __init__(self, pattern, path, value_type='str', read_type='line',
+                 num='all', route='.:', **kwargs):
         super().__init__(**kwargs)
-        self.regex = regex
+        self.pattern = pattern
         self.path = path
         self.value_type = value_type
         self.read_type = read_type
         self.num = num
+        self.route = route
 
     str_to_type = {'str': str, 'int': int, 'float': float, 'bool': bool}
 
@@ -28,10 +29,10 @@ class RegexFile(Set):
         with open(p) as f:
             if self.read_type == 'line':
                 for line in f:
-                    r = re.findall(self.regex, line)
+                    r = re.findall(self.pattern, line)
                     rs.extend(r)
             elif self.read_type == 'all':
-                rs = re.findall(self.regex, f.read())
+                rs = re.findall(self.pattern, f.read())
             else:
                 raise ValueError(self.read_type)
         if len(rs) == 0:
@@ -41,13 +42,13 @@ class RegexFile(Set):
         else:
             v = [t(x.strip()) for x in rs]
         if isinstance(v, list):
-            if self.num == 'last':
-                self.sup_action.value = v[-1]
-            elif self.num == 'first':
-                self.sup_action.value = v[0]
+            if isinstance(self.num, list):
+                self.get_routes()[self.route].value = [v[x] for x in self.num]
+            elif isinstance(self.num, int):
+                self.get_routes()[self.route].value = v[self.num]
             elif self.num == 'all':
-                self.sup_action.value = v
+                self.get_routes()[self.route].value = v
             else:
                 raise ValueError(self.num)
         else:
-            self.sup_action.value = v
+            self.get_routes()[self.route].value = v

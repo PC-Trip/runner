@@ -1,0 +1,3 @@
+$.:.continuous$
+$.:.discrete$ $.:.discrete_float$
+$.:.categorical$

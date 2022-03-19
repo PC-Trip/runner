@@ -2,18 +2,18 @@ import json
 from pathlib import Path
 import logging
 
-from action.action import Action
-from action.run.subprocess import Subprocess
-from action.feature.feature import Feature
-from action.set.continuous import Continuous
-from action.set.discrete import Discrete
-from action.set.categorical import Categorical
-from action.set.equation import Equation
-from action.set.regex import Regex as SetRegex
-from action.set.regex_file import RegexFile as SetRegexFile
-from action.get.json import Json as GetJson
-from action.get.regex_file import RegexFile as GetRegexFile
-from action.get.foam.dictionary import Dictionary as FoamDictionary
+from runner.action.action import Action
+from runner.action.run.subprocess import Subprocess
+from runner.action.feature.feature import Feature
+from runner.action.set.continuous import Continuous
+from runner.action.set.discrete import Discrete
+from runner.action.set.categorical import Categorical
+from runner.action.set.equation import Equation
+from runner.action.set.value import Value
+from runner.action.set.file.regex import Regex as SetFileRegex
+from runner.action.get.file.markup.json import Json as GetFileJson
+from runner.action.get.file.markup.foam import Foam as GetFileFoam
+from runner.action.get.file.template import Template as GetFileTemplate
 
 
 class FactoryClassError(Exception):
@@ -50,11 +50,11 @@ class Factory:
             'Discrete': Discrete,
             'Categorical': Categorical,
             'Equation': Equation,
-            'set.Regex': SetRegex,
-            'set.RegexFile': SetRegexFile,
-            'get.Json': GetJson,
-            'get.RegexFile': GetRegexFile,
-            'get.FoamDictionary': FoamDictionary,
+            'Value': Value,
+            'SetFileRegex': SetFileRegex,
+            'GetFileJson': GetFileJson,
+            'GetFileFoam': GetFileFoam,
+            'GetFileTemplate': GetFileTemplate
         }
 
         try:

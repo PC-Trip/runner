@@ -4,29 +4,26 @@ TODO parse list, table, vector, tensor
 """
 from pathlib import Path
 
-from runner.action.get.get import Get
-from runner.action.get.json import Json
-from runner.action.feature.feature import Feature
+from runner.action.get.file.markup.markup import Markup
 
 
-class Dictionary(Get):
-    def __init__(self, path, mapping, regex='\{[.A-Za-z0-9\-\_]*\}', dump_path=None,
+class Foam(Markup):
+    def __init__(self, path, mapping, pattern='\$[^\s$]*\$', output=None,
                  **kwargs):
         super().__init__(**kwargs)
         self.path = path
-        self.dump_path = path if dump_path is None else dump_path
         self.mapping = mapping
         for k in list(self.mapping.keys()):
             if k == '':
                 self.mapping[None] = self.mapping.pop(k)
-        self.regex = regex
+        self.pattern = pattern
+        self.output = path if output is None else output
 
     def post_call(self, *args, **kwargs):
         p = Path(self.path).resolve()
         d = self.load(p)
-        features = Feature.get_features(self.sup_action)
-        d = Json.update(d, self.mapping, features, self.regex)
-        dp = Path(self.dump_path).resolve()
+        d = Markup.update(d, self.mapping, self.get_routes(), self.pattern)
+        dp = Path(self.output).resolve()
         dp.parent.mkdir(parents=True, exist_ok=True)
         self.dump(d, dp)
 
@@ -34,10 +31,10 @@ class Dictionary(Get):
     def load(path):
         d = {}
         with open(path) as f:
-            name, kvs = Dictionary.load_object(f)
+            name, kvs = Foam.load_object(f)
             while name is not None or len(kvs) > 0:
                 d[name] = kvs
-                name, kvs = Dictionary.load_object(f)
+                name, kvs = Foam.load_object(f)
         return d
 
     @staticmethod
@@ -66,7 +63,7 @@ class Dictionary(Get):
                     elif name is None and len(kvs) == 0:
                         name = k
                     else:
-                        sub_name, sub_kvs = Dictionary.load_object(f, k)
+                        sub_name, sub_kvs = Foam.load_object(f, k)
                         kvs[sub_name] = sub_kvs
                 elif len(vs) == 1:
                     kvs[k] = vs[0]
@@ -86,7 +83,7 @@ class Dictionary(Get):
     def dump(dictionary, path):
         with open(path, 'w') as f:
             for name, kvs in dictionary.items():
-                Dictionary.dump_object(name, kvs, f)
+                Foam.dump_object(name, kvs, f)
 
     @staticmethod
     def dump_object(name, kvs, f):
@@ -97,7 +94,7 @@ class Dictionary(Get):
             if isinstance(v, list):
                 f.write(f'{k} ({" ".join([str(x) for x in v])});\n')
             elif isinstance(v, dict):
-                Dictionary.dump_object(k, v, f)
+                Foam.dump_object(k, v, f)
             else:
                 f.write(f'{k} {v};\n')
         if name is not None:
