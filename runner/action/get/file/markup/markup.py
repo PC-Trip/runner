@@ -29,12 +29,12 @@ class Markup(File):
                             elif x is not None:
                                 d[k][i] = Markup.substitute(routes, x, pattern)
                     else:
-                        raise ValueError(f'Bad mapping {u}, {d}, {m}')
+                        raise ValueError(f'Bad mapping {u}, {d}, {mapping}')
                 else:
                     d[k] = Markup.substitute(routes, v, pattern)
         elif isinstance(mapping, list):
             if not isinstance(d, list):
-                raise ValueError(f'Bad mapping {d}, {m}')
+                raise ValueError(f'Bad mapping {d}, {mapping}')
             if len(mapping) != len(d):
                 d = deepcopy(mapping)
             for i, x in enumerate(mapping):
