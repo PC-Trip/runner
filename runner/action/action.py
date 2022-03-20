@@ -173,7 +173,7 @@ class Action:
     def post_call(self, *args, **kwargs):
         pass
 
-    def get_routes(self, routes=None, prev_action=None, route=':', sep='.', def_tag=''):
+    def get_routes(self, routes=None, prev_action=None, route='::', sep='.', def_tag=''):
         """Recursively get routes from the action to other activities
 
         Routes are concatenated from action tags and separator.
@@ -221,6 +221,15 @@ class Action:
         return routes
 
     def get_graph(self, graph=None, prev_action=None):
+        """Recursively creating parent-children dictionary
+
+        Args:
+            graph (dict): parent-children dictionary
+            prev_action (Action): previous visited action or None at the start
+
+        Returns:
+            dict: parent-children dictionary
+        """
         graph = {} if graph is None else graph
         if prev_action is None:  # This action is the root node
             for s in self.sub_actions:

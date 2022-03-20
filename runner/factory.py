@@ -14,6 +14,7 @@ from runner.action.set.file.regex import Regex as SetFileRegex
 from runner.action.get.file.markup.json import Json as GetFileJson
 from runner.action.get.file.markup.foam import Foam as GetFileFoam
 from runner.action.get.file.template import Template as GetFileTemplate
+from runner.action.optimize.optuna import Optuna
 
 
 class FactoryClassError(Exception):
@@ -54,16 +55,9 @@ class Factory:
             'SetFileRegex': SetFileRegex,
             'GetFileJson': GetFileJson,
             'GetFileFoam': GetFileFoam,
-            'GetFileTemplate': GetFileTemplate
+            'GetFileTemplate': GetFileTemplate,
+            'Optuna': Optuna
         }
-
-        try:
-            from runner.action.optimize.optuna import Optuna
-            self.str2obj['Optuna'] = Optuna
-        except ModuleNotFoundError as e:
-            logging.warning(e)
-            logging.warning('To use optuna run: pip install -r requirements/optuna.txt '
-                            'or pip install -r requirements/optuna_post.txt with post-processing features')
 
     def __call__(self, obj):
         if isinstance(obj, dict):

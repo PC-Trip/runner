@@ -11,7 +11,7 @@ from runner.action.set.file.file import File
 
 class Regex(File):
     def __init__(self, pattern, path, value_type='str', read_type='line',
-                 num='all', route='.:', **kwargs):
+                 num='all', route='.::', **kwargs):
         super().__init__(**kwargs)
         self.pattern = pattern
         self.path = path

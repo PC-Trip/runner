@@ -2,7 +2,7 @@ from runner.action.set.set import Set
 
 
 class Value(Set):
-    def __init__(self, value, route='.:', **kwargs):
+    def __init__(self, value, route='.::', **kwargs):
         super().__init__(**kwargs)
         self.value = value
         self.route = route
