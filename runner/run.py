@@ -8,7 +8,7 @@ import sys
 import getpass
 from pathlib import Path
 
-import factory
+from runner import factory
 
 
 def set_logging(metadata):
@@ -77,7 +77,7 @@ def parse_input():
     parser.add_argument('-v', '--log_level', default=argparse.SUPPRESS,
                         choices=['CRITICAL', 'FATAL', 'ERROR', 'WARNING',
                                  'WARN', 'INFO', 'DEBUG', 'NOTSET'])
-    a = vars(parser.parse_args())  # arguments
+    a = vars(parser.parse_known_args()[0])  # arguments
     # Get input
     p = Path(a['input_path']).resolve()
     with open(p) as f:

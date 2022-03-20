@@ -220,6 +220,25 @@ class Action:
                 routes = s.get_routes(routes, self, route, sep, def_tag)
         return routes
 
+    def get_graph(self, graph=None, prev_action=None):
+        graph = {} if graph is None else graph
+        if prev_action is None:  # This action is the root node
+            for s in self.sub_actions:
+                graph.setdefault(self, []).append(s)
+                graph = s.get_graph(graph, self)
+        elif prev_action.sup_action == self:  # This action is the super action of previous
+            if self.sup_action is not None:
+                graph = self.sup_action.get_graph(graph, self)
+            for s in self.sub_actions:
+                if s != prev_action:
+                    graph.setdefault(self, []).append(s)
+                    graph = s.get_graph(graph, self)
+        else:  # This action is a sub action of previous
+            for s in self.sub_actions:
+                graph.setdefault(self, []).append(s)
+                graph = s.get_graph(graph, self)
+        return graph
+
     def __call__(self, *args, **kwargs):
         stack_trace = [self]
         while stack_trace[-1].sup_action is not None:

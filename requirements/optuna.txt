@@ -1,2 +1,0 @@
--r common.txt
-optuna==2.10.0

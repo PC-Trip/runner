@@ -58,7 +58,7 @@ class Factory:
         }
 
         try:
-            from action.optimize.optuna import Optuna
+            from runner.action.optimize.optuna import Optuna
             self.str2obj['Optuna'] = Optuna
         except ModuleNotFoundError as e:
             logging.warning(e)
