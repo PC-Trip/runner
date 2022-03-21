@@ -68,14 +68,17 @@ class Factory:
         elif isinstance(obj, list) and len(obj) > 1:
             key, args, kwargs = obj[0], obj[1:], {}
         elif isinstance(obj, str):
-            p = Path(obj)
-            if p.is_file() and p.suffix == '.json':
-                with open(p) as f:
-                    data = json.load(f)
-                if 'class' in obj:
-                    key, args, kwargs = data.pop('class'), [], data
+            if obj.startswith('/'):
+                p = Path(obj)
+                if p.exists() and p.suffix == '.json':
+                    with open(p) as f:
+                        data = json.load(f)
+                    if 'class' in obj:
+                        key, args, kwargs = data.pop('class'), [], data
+                    else:
+                        raise FactoryClassError(obj)
                 else:
-                    raise FactoryClassError(obj)
+                    raise ValueError(p)
             else:
                 key, args, kwargs = obj, [], {}
         else:
