@@ -1,4 +1,3 @@
-import json
 import argparse
 import logging
 import time
@@ -8,7 +7,9 @@ import sys
 import getpass
 from pathlib import Path
 
+
 from runner import factory
+from runner.load import load
 
 
 def set_logging(metadata):
@@ -61,10 +62,8 @@ def initialize(data, fac):
             data[i] = initialize(v, fac)
     elif isinstance(data, str) and data.startswith('/'):
         p = Path(data[1:]).resolve()
-        if p.exists() and p.suffix == '.json':
-            with open(p) as f:
-                d = json.load(f)
-            data = initialize(d['data'], fac)
+        d = load(p)
+        data = initialize(d['data'], fac)
     return data
 
 
@@ -80,8 +79,7 @@ def parse_input():
     a = vars(parser.parse_known_args()[0])  # arguments
     # Get input
     p = Path(a['input_path']).resolve()
-    with open(p) as f:
-        i = json.load(f)  # input
+    i = load(p)
     # Update input metadata by arguments
     i.setdefault('data', {})
     i.setdefault('metadata', {})

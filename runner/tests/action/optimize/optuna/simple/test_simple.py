@@ -134,10 +134,10 @@ def test_optimize_sqlite(run):
     assert run == 0
     with open('input.txt') as f:
         _, x = f.read().strip().split()
-    assert '3' == x
+    assert x == '3'
     with open('output.txt') as f:
         _, y = f.read().strip().split()
-    assert '9' == y
+    assert y == '9'
 
 
 @pytest.mark.parametrize("run", ["no_optimize_sub_call_best_from_sqlite.json"], indirect=True)
