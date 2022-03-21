@@ -4,7 +4,7 @@ from runner.action.set.variable import Variable
 
 
 class Categorical(Variable):
-    def __init__(self, choices, route='.::', **kwargs):
+    def __init__(self, choices, route='.~~', **kwargs):
         super().__init__(**kwargs)
         self.choices = choices
         self.route = route

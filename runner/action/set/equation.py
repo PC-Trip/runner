@@ -10,7 +10,7 @@ from runner.action.set.variable import Variable
 
 
 class Equation(Variable):
-    def __init__(self, equation, regex='\$[^\s$]*\$', route='.::', **kwargs):
+    def __init__(self, equation, regex='\$[^\s$]*\$', route='.~~', **kwargs):
         super().__init__(**kwargs)
         self.equation = equation
         self.regex = regex

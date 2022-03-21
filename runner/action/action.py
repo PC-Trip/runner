@@ -173,7 +173,7 @@ class Action:
     def post_call(self, *args, **kwargs):
         pass
 
-    def get_routes(self, routes=None, prev_action=None, route='::', sep='.', def_tag=''):
+    def get_routes(self, routes=None, prev_action=None, route='~~', sep='.', def_tag=''):
         """Recursively get routes from the action to other activities
 
         Routes are concatenated from action tags and separator.

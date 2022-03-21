@@ -33,7 +33,7 @@ class Template(File):
         m = p.search(template)
         while m is not None:
             route = ''.join([x for x in m.group(0)
-                             if x.isalnum() or x in ['.', ':', '_', '-']])
+                             if x.isalnum() or x in ['.', '~', '_', '-']])
             if route not in routes:
                 ks = '"\n"'.join(routes.keys())
                 raise ValueError(f'"{route}" is not in routes:\n"{ks}"')

@@ -4,7 +4,7 @@ from runner.action.set.variable import Variable
 
 
 class Discrete(Variable):
-    def __init__(self, low=0, high=1, num=None, route='.::', **kwargs):
+    def __init__(self, low=0, high=1, num=None, route='.~~', **kwargs):
         super().__init__(**kwargs)
         self.low = low
         self.high = high

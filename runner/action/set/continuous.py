@@ -4,7 +4,7 @@ from runner.action.set.variable import Variable
 
 
 class Continuous(Variable):
-    def __init__(self, low=0.0, high=1.0, route='.::', **kwargs):
+    def __init__(self, low=0.0, high=1.0, route='.~~', **kwargs):
         super().__init__(**kwargs)
         self.low = low
         self.high = high

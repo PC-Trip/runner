@@ -5,7 +5,7 @@
   },
   "data": {"key": "number", "class": "Feature", "sub_actions": [
     {"value": 42, "class": "Value"},
-    {"template": "$.::$ $.::$", "path": "value_template_string.txt", "class": "GetFileTemplate"},
+    {"template": "$.~~$ $.~~$", "path": "value_template_string.txt", "class": "GetFileTemplate"},
     {"template": "value_template.txt", "path": "value_template_file.txt", "class": "GetFileTemplate"},
     {"template": "", "path": "value_template_empty_string.txt", "class": "GetFileTemplate"},
     {"template": "value_template_empty.txt", "path": "value_template_empty_file.txt", "class": "GetFileTemplate"}]

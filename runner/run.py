@@ -83,6 +83,8 @@ def parse_input():
     with open(p) as f:
         i = json.load(f)  # input
     # Update input metadata by arguments
+    i.setdefault('data', {})
+    i.setdefault('metadata', {})
     i['metadata'].update(a)
     i['metadata'].setdefault('log_path', p.with_suffix('.log'))
     i['metadata'].setdefault('log_level', 'INFO')

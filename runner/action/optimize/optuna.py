@@ -44,107 +44,82 @@ class Optuna(Optimize):
     Args:
         storage (str): dialect+driver://username:password@host:port/database
             see SQLAlchemy https://docs.sqlalchemy.org/en/14/core/engines.html
+        study (str): study unique name
+        objectives (dict): route to direction ("minimize" nor "maximize")
+        n_trials (int): The number of trials. If this argument is set to None,
+            there is no limitation on the number of trials. If timeout is also
+            set to None, the study continues to create trials until it receives
+            a termination signal such as Ctrl+C or SIGTERM.
+        copies (list): list of files/directories to copy in trial sub directory
+        parameters (list of str): parameters routes
     """
 
-    def __init__(self, storage=None, study_name=None, work_path=None,
+    def __init__(self, storage=None, study=None, work_path=None,
+                 copies=None, links=None,
+                 do_clean_work=None, do_clean_study=None, do_clean_trial=None,
                  do_create_study=None, do_read_study=None, do_delete_study=None,
-                 do_write_results=None, do_write_csv=None, do_write_excel=None,
+                 parameters=None, objectives=None, constraints=None,
+                 sampler=None, sampler_kwargs=None,
+                 pruner=None, pruner_kwargs=None,
+                 do_results=None, do_csv=None, do_excel=None, do_plot=None,
                  do_plot_pareto=None, do_plot_other=None,
                  results_color_key=None,
                  results_color_scale=None,
-                 do_results_reverse_color=None,
+                 do_results_color_reverse=None,
                  results_hover_keys=None,
                  do_optimize=None, n_trials=1,
-                 objectives=None, constraints=None,
-                 sampler=None, sampler_kwargs=None,
-                 pruner=None, pruner_kwargs=None,
-                 copies=None, links=None,
-                 do_update_sub_actions=None, update_sub_actions_trial=None,
-                 do_sub_call=None,
+                 do_update=None, trial=None, do_sub_call=None,
                  **kwargs):
         super().__init__(**kwargs)
+        # Study
         self.storage = storage
-        self.study_name = str(uuid.uuid4()) if study_name is None else study_name
+        self.study = str(uuid.uuid4()) if study is None else study
         self.work_path = Path(str(uuid.uuid4())).resolve() if work_path is None else Path(work_path).resolve()
+        self.study_path = (self.work_path / self.study).resolve()
         self.do_create_study = True if do_create_study is None else do_create_study
         self.do_read_study = True if do_read_study is None else do_read_study
         self.do_delete_study = False if do_delete_study is None else do_delete_study
-        self.do_write_results = True if do_write_results is None else do_write_results
-        self.do_write_csv = True if do_write_csv is None else do_write_csv
-        self.do_write_excel = False if do_write_excel is None else do_write_excel
-        self.do_plot_pareto = True if do_plot_pareto is None else do_plot_pareto
-        self.do_plot_other = True if do_plot_other is None else do_plot_other
-        self.results_color_key = results_color_key
-        self.results_color_scale = 'Viridis' if results_color_scale is None else results_color_scale
-        self.do_results_reverse_color = False if do_results_reverse_color is None else do_results_reverse_color
-        self.results_hover_keys = [] if results_hover_keys is None else results_hover_keys
-        self.do_optimize = True if do_optimize is None else do_optimize
-        self.n_trials = n_trials
-        self.objectives = {} if objectives is None else objectives
-        self.constraints = {} if constraints is None else constraints
-        self.copies = [] if copies is None else [Path(x).resolve() for x in copies]
-        self.links = [] if links is None else [Path(x).resolve() for x in links]
+        self.copies = [] if copies is None else [Path(x) for x in copies]
+        self.links = [] if links is None else [Path(x) for x in links]
+        self.do_clean_work = False if do_clean_work is None else do_clean_work
+        self.do_clean_study = False if do_clean_study is None else do_clean_study
+        self.do_clean_trial = False if do_clean_trial is None else do_clean_trial
+        # Optimizer
         self.sampler = sampler
         self.sampler_kwargs = {} if sampler_kwargs is None else sampler_kwargs
         self.pruner = pruner
         self.pruner_kwargs = {} if pruner_kwargs is None else pruner_kwargs
-        self.study_dir = (self.work_path / self.study_name).resolve()
-        self.do_update_sub_actions = False if do_update_sub_actions is None else do_update_sub_actions
-        self.update_sub_actions_trial = update_sub_actions_trial
+        self.parameters = parameters
+        self.objectives = {} if objectives is None else objectives
+        self.constraints = [] if constraints is None else constraints
+        # Results
+        self.do_results = True if do_results is None else do_results
+        self.do_csv = True if do_csv is None else do_csv
+        self.do_excel = False if do_excel is None else do_excel
+        self.do_plot = False if do_plot is None else do_plot
+        self.do_plot_pareto = True if do_plot_pareto is None else do_plot_pareto
+        self.do_plot_other = True if do_plot_other is None else do_plot_other
+        self.results_color_key = results_color_key
+        self.results_color_scale = 'Viridis' if results_color_scale is None else results_color_scale
+        self.do_results_reverse_color = False if do_results_color_reverse is None else do_results_color_reverse
+        self.results_hover_keys = [] if results_hover_keys is None else results_hover_keys
+        # Optimize
+        self.do_optimize = True if do_optimize is None else do_optimize
+        self.n_trials = n_trials
+        # Update
+        self.do_update = False if do_update is None else do_update
+        self.trial = trial
         self.do_sub_call = False if do_sub_call is None else do_sub_call
+        # Common
+        self.variable2template = None  # Variable to template
+        self.feature2route = None  # Feature to route
 
     class Objective:
         def __init__(self, optuna_action=None):
             self.optuna_action = optuna_action
 
-        @staticmethod
-        def evaluate_feature(f, trial):
-            def suggest_value(f, trial, sep='.'):
-                name = '' if f.key is None else f.key
-                sup_f = f.sup_action
-                while sup_f is not None and isinstance(sup_f, Feature):
-                    name = sep.join([sup_f.key, name])
-                    sup_f = sup_f.sup_action
-                s = f.pre_call
-                if isinstance(s, Continuous):
-                    f.pre_call = Value(value=trial.suggest_float(
-                        name=name, low=s.low, high=s.high))
-                elif isinstance(s, Categorical):
-                    f.pre_call = Value(value=trial.suggest_categorical(
-                        name=name, choices=s.choices))
-                elif isinstance(s, Discrete):
-                    if isinstance(s.low, int) and isinstance(s.high, int):
-                        step = (s.high - s.low) // (s.num - 1) if s.num != 1 else 1
-                        v = trial.suggest_int(
-                            name=name, low=s.low, high=s.high, step=step)
-                    else:
-                        step = (s.high - s.low) / (s.num - 1) if s.num != 1 else 1
-                        v = trial.suggest_float(
-                            name=name, low=s.low, high=s.high, step=step)
-                    f.pre_call = Value(value=v)
-                else:
-                    pass
-                for sub_f in f.sub_actions:
-                    if isinstance(sub_f, Feature):
-                        suggest_value(sub_f, trial)
-
-            def set_user_attr(f, trial, sep='.'):
-                name = '' if f.key is None else f.key
-                sup_f = f.sup_action
-                while sup_f is not None and isinstance(sup_f, Feature):
-                    name = sep.join([sup_f.key, name])
-                    sup_f = sup_f.sup_action
-                trial.set_user_attr(name, f.value)
-                for sub_f in f.sub_actions:
-                    if isinstance(sub_f, Feature):
-                        set_user_attr(sub_f, trial)
-
-            f2 = copy.deepcopy(f)
-            suggest_value(f2, trial)
-            f2()
-            set_user_attr(f2, trial)
-
         def __call__(self, trial):
+            # Set user attributes
             def get_ip():
                 if platform.system() == 'Windows':  # VPN
                     ip = socket.gethostbyname(socket.getfqdn())
@@ -174,66 +149,168 @@ class Optuna(Optimize):
             # TODO multiprocessing logging
             if self.optuna_action.executor is not None:
                 optuna.logging.set_verbosity(optuna.logging.WARNING)
-            trial_dir = self.optuna_action.study_dir / str(trial.number)
-            trial_dir = trial_dir.resolve()
-            trial_dir.mkdir(parents=True, exist_ok=True)
+
+            # Copy data
+            trial_path = self.optuna_action.study_path / str(trial.number)
+            trial_path = trial_path.resolve()
+            trial_path.mkdir(parents=True, exist_ok=True)
             for p in self.optuna_action.copies:
                 if p.is_dir():
-                    shutil.copytree(p, trial_dir / p.name)
+                    shutil.copytree(p, trial_path / p.name)
                 elif p.is_file():
-                    shutil.copy(p, trial_dir)
+                    shutil.copy(p, trial_path)
                 else:
                     raise ValueError(p)
             for link in self.optuna_action.links:
                 if link.is_dir():
-                    os.symlink(link, trial_dir / link.name,
+                    os.symlink(link, trial_path / link.name,
                                target_is_directory=True)
                 elif link.is_file():
-                    os.symlink(link, trial_dir / link.name,
+                    os.symlink(link, trial_path / link.name,
                                target_is_directory=False)
                 else:
                     raise ValueError(link)
-            os.chdir(trial_dir)
-            for a in self.optuna_action.sub_actions:
-                if isinstance(a, Feature):
-                    self.evaluate_feature(a, trial)
+            root = Path().resolve()
+            os.chdir(trial_path)
+
+            # Replace variables
+            self.optuna_action.replace_variables(kind='suggested', trial=trial)
+
+            # Run action recursively
+            # TODO implement this with callbacks?
+            def run(action, trial):
+                for a in action.sub_actions:
+                    # Stop if failed constraints
                     for c in self.optuna_action.constraints:
                         if not trial.user_attrs.get(c, True):
                             return float('nan')
-                elif isinstance(a, Subprocess):
-                    a()
-                    if a.result is None or a.result.returncode != 0:
-                        return float('nan')
-            objectives = []
+                    a.pre_call()
+                    run(a, trial)
+                    a.post_call()
+                    # Save Feature values to trial
+                    if isinstance(a, Feature):
+                        r = self.optuna_action.feature2route[a]
+                        trial.set_user_attr(f'features_{r}', a.value)
+                    # Stop if subprocess failed
+                    elif isinstance(a, Subprocess):
+                        if a.result is None or a.result.returncode != 0:
+                            return float('nan')
+
+            run(self.optuna_action, trial)
+
+            # Reset variables
+            self.optuna_action.replace_variables(kind='template')
+
+            # Return values
+            values = []
             for i, (k, v) in enumerate(self.optuna_action.objectives.items()):
-                o = trial.user_attrs.get(k, None)
-                objectives.append(float('nan') if o is None else o)
-                trial.set_user_attr(f'values_{i}_{k}', o)
-            return tuple(objectives)
+                value = trial.user_attrs.get(f'features_{k}', None)
+                values.append(float('nan') if value is None else value)
+                trial.set_user_attr(f'values_{i}_{k}', value)
+
+            # Clean data
+            os.chdir(root)
+            if self.optuna_action.do_clean_trial:
+                shutil.rmtree(trial_path, ignore_errors=True)
+            return tuple(values)
 
     def pre_call(self, *args, **kwargs):
         # TODO multiprocessing logging
         optuna.logging.enable_propagation()  # Propagate logs to the root logger.
         optuna.logging.disable_default_handler()  # Stop showing logs in sys.stderr.
+        # Study
         root = Path().resolve()
+        self.study_path.mkdir(parents=True, exist_ok=True)
+        self.study_path = self.study_path.resolve()
         if self.do_delete_study:
-            optuna.delete_study(storage=self.storage, study_name=self.study_name)
+            optuna.delete_study(storage=self.storage, study_name=self.study)
+            if self.do_clean_study:
+                shutil.rmtree(self.study_path, ignore_errors=True)
             return
-        self.study_dir.mkdir(parents=True, exist_ok=True)
-        self.study_dir = self.study_dir.resolve()
+        # Create
         study = self.create_study()
+        # Optimize
         if self.do_optimize:
             study.optimize(func=self.Objective(self), n_trials=self.n_trials,
                            timeout=self.timeout)  # TODO timeout from executor?
-        if self.do_write_results:
+        # Results
+        if self.do_results:
             self.write_results(study)
-        if self.do_update_sub_actions:
-            self.update_sub_actions(study)
+        # Update
+        if self.do_update:
+            self.update(study)
+        # Clean
         os.chdir(root)
+        if self.do_clean_study:
+            shutil.rmtree(self.study_path, ignore_errors=True)
+        if self.do_clean_work:
+            shutil.rmtree(self.work_path, ignore_errors=True)
 
     def sub_call(self, *args, **kwargs):
         if self.do_sub_call:
             super().sub_call(*args, **kwargs)
+
+    def replace_variables(self, kind='suggested', trial=None):
+        if self.variable2template is None:
+            self.variable2template = {}
+            g = self.get_graph()
+            for p, cs in g.items():
+                if isinstance(p, (Continuous, Discrete, Categorical)):
+                    self.variable2template.setdefault(p, copy.deepcopy(p))
+                for c in cs:
+                    if isinstance(c, (Continuous, Discrete, Categorical)):
+                        self.variable2template.setdefault(c, copy.deepcopy(c))
+        if self.parameters is None:
+            self.parameters = [k for k, v in self.get_routes().items()
+                               if isinstance(v, Feature)]
+        if self.feature2route is None:
+            self.feature2route = {v: k for k, v in self.get_routes().items()
+                                  if isinstance(v, Feature)}
+        for v, t in self.variable2template.items():
+            f = v.get_routes()[v.route]  # Feature
+            r = self.feature2route[f]  # Route to Feature
+            if r not in set(self.parameters):  # Replace parameters only
+                continue
+            if isinstance(v, Continuous):
+                if kind == 'suggested':
+                    value = trial.suggest_float(name=r, low=t.low, high=t.high)
+                    v.low, v.high = value, value
+                elif kind == 'optimized':
+                    value = trial.user_attrs[f'features_{r}']
+                    v.low, v.high = value, value
+                elif kind == 'template':
+                    v.low, v.high = t.low, t.high
+                else:
+                    raise ValueError(kind)
+            elif isinstance(v, Discrete):
+                if isinstance(t.low, int) and isinstance(t.high, int):
+                    s = (t.high - t.low) // (t.num - 1) if t.num != 1 else 1
+                else:
+                    s = (t.high - t.low) / (t.num - 1) if t.num != 1 else 1
+                if kind == 'suggested':
+                    value = trial.suggest_float(name=r, low=t.low, high=t.high, step=s)
+                    v.low, v.high, v.num = value, value, 1
+                elif kind == 'optimized':
+                    value = trial.user_attrs[f'features_{r}']
+                    v.low, v.high, v.num = value, value, 1
+                elif kind == 'template':
+                    v.low, v.high, v.num = t.low, t.high, t.num
+                else:
+                    raise ValueError(kind)
+            elif isinstance(v, Categorical):
+                if kind == 'suggested':
+                    value = trial.suggest_categorical(name=r, choices=t.choices)
+                    v.choices = [value]
+                elif kind == 'optimized':
+                    value = trial.user_attrs[f'features_{r}']
+                    v.choices = [value]
+                elif kind == 'template':
+                    v.choices = t.choices
+                else:
+                    raise ValueError(kind)
+            else:
+                raise ValueError('Optuna works with Continuous, Discrete '
+                                 'and Categorical variables only!')
 
     def create_study(self):
         if self.sampler is not None:
@@ -252,7 +329,7 @@ class Optuna(Optimize):
             if len(self.objectives) == 1:
                 direction = list(self.objectives.values())[0]
                 study = optuna.create_study(storage=self.storage,
-                                            study_name=self.study_name,
+                                            study_name=self.study,
                                             load_if_exists=load_if_exists,
                                             sampler=sampler,
                                             pruner=pruner,
@@ -260,17 +337,17 @@ class Optuna(Optimize):
             elif len(self.objectives) > 1:  # Multi-objective
                 directions = list(self.objectives.values())
                 study = optuna.create_study(storage=self.storage,
-                                            study_name=self.study_name,
+                                            study_name=self.study,
                                             load_if_exists=load_if_exists,
                                             sampler=sampler,
                                             pruner=pruner,
                                             directions=directions)
             else:
-                raise ValueError(self.objectives)
+                raise ValueError(f'No objectives: {self.objectives}!')
         else:
             if self.do_read_study:
                 study = optuna.load_study(storage=self.storage,
-                                          study_name=self.study_name,
+                                          study_name=self.study,
                                           sampler=sampler,
                                           pruner=pruner)
                 try:
@@ -289,44 +366,35 @@ class Optuna(Optimize):
                 raise ValueError('do_crate_study and/or do_read_study should be set')
         return study
 
-    def update_sub_actions(self, study):
-        if len(study.trials) == 0:
-            logging.warning(f'No trials in study {self.study_name} for update!')
-            return
-        if self.update_sub_actions_trial is None:  # Use best trial
+    def update(self, study):
+        trial = None
+        if self.trial is not None:  # Use trial by index
+            if self.trial < len(study.trials):
+                trial = study.trials[self.trial]
+        else:  # Use best trial
             if study.directions is not None:
                 if len(study.best_trials) > 0:
                     trial = study.best_trials[0]
-                else:
-                    trial = None
             elif study.direction is not None:
                 trial = study.best_trial
-            else:
-                trial = None
-        else:  # update_trial_number is index
-            if self.update_sub_actions_trial < len(study.trials):
-                trial = study.trials[self.update_sub_actions_trial]
-            else:
-                trial = None
         if trial is not None:
-            logging.info(f'Updating sub_actions with trial {trial}')
-            for a in self.sub_actions:
-                if isinstance(a, Feature):
-                    if a.key in trial.params:
-                        v = trial.params[a.key]
-                        a.pre_call = Value(value=v)
+            logging.info(f'Updating parameters with trial number {trial.number}.')
+            self.replace_variables(kind='optimized', trial=trial)
+        else:
+            logging.warning(f'No trial in study {self.study} to update parameters! '
+                            f'Using default parameters...')
 
     def write_results(self, study):
         if len(study.trials) == 0:
-            logging.warning(f'No trials in study {self.study_name} to write/plot!')
+            logging.warning(f'No trials in study {self.study} to write/plot!')
             return
-        p = self.study_dir
-        if self.do_write_csv:
+        p = self.study_path
+        if self.do_csv:
             try:  # required pandas
                 study.trials_dataframe().to_csv(p / 'data.csv')
             except Exception as e:
                 print(e)
-        if self.do_write_excel:
+        if self.do_excel:
             try:  # required pandas
                 study.trials_dataframe().to_excel(p / 'data.xlsx')
             except Exception as e:

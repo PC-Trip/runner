@@ -8,10 +8,10 @@
     {"key": "discrete", "class": "Feature", "sub_actions": [{"class": "Discrete", "low": -42, "high": 42}]},
     {"key": "discrete_float", "class": "Feature", "sub_actions": [{"class": "Discrete", "low": -1.5, "high": 1.5, "num": 4}]},
     {"key": "categorical", "class": "Feature", "sub_actions": [{"class": "Categorical", "choices": ["red", "green", "blue"]}]},
-    {"template": "$.::.continuous$", "path": "variable_continuous.txt", "class": "GetFileTemplate"},
-    {"template": "$.::.discrete$", "path": "variable_discrete.txt", "class": "GetFileTemplate"},
-    {"template": "$.::.discrete_float$", "path": "variable_discrete_float.txt", "class": "GetFileTemplate"},
-    {"template": "$.::.categorical$", "path": "variable_categorical.txt", "class": "GetFileTemplate"},
+    {"template": "$.~~.continuous$", "path": "variable_continuous.txt", "class": "GetFileTemplate"},
+    {"template": "$.~~.discrete$", "path": "variable_discrete.txt", "class": "GetFileTemplate"},
+    {"template": "$.~~.discrete_float$", "path": "variable_discrete_float.txt", "class": "GetFileTemplate"},
+    {"template": "$.~~.categorical$", "path": "variable_categorical.txt", "class": "GetFileTemplate"},
     {"template": "variable.txt", "path": "variable_file.txt", "class": "GetFileTemplate"}]
   }
 }

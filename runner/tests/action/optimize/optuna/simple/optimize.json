@@ -1,0 +1,20 @@
+{
+  "metadata": {
+    "log_level": "DEBUG",
+    "log_path": null
+  },
+  "data": {
+    "class": "Optuna",
+    "n_trials": 10,
+    "objectives": {"~~.y":  "minimize"},
+    "copies": ["input.txt", "script.py"],
+    "sub_actions": [
+      {"key": "x", "class": "Feature", "sub_actions": [
+        {"class": "Continuous", "low": -2, "high": 2},
+        {"class": "GetFileTemplate", "template": "x $.~~$", "path": "input.txt"}]},
+      {"class": "Subprocess", "subprocess_kwargs": {"args": ["python", "script.py"]}},
+      {"key": "y", "class": "Feature", "sub_actions": [
+        {"class": "SetFileRegex", "pattern": "-?\\d+\\.\\d+", "path": "output.txt", "value_type": "float"}]}
+    ]
+  }
+}
