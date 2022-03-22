@@ -3,12 +3,19 @@ from pathlib import Path
 
 
 @pytest.fixture(autouse=True)
-def run_around_tests():
-    yield
+def run_around_tests(request, monkeypatch):
+    monkeypatch.chdir(request.fspath.dirname)
     with open('input.txt', 'w') as f:
         f.write(f'x 3')
     with open('output.txt', 'w') as f:
         f.write(f'y 9')
+    try:
+        yield
+    finally:
+        with open('input.txt', 'w') as f:
+            f.write(f'x 3')
+        with open('output.txt', 'w') as f:
+            f.write(f'y 9')
 
 
 @pytest.mark.parametrize("run", ["optimize.json"], indirect=True)

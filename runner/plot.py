@@ -8,10 +8,14 @@ from runner.factory import Factory
 from runner.load import load
 
 
-def plot_action(a, output=None, height='600px', width='600px', title="",
+def plot_action(a, output_path=None, height='600px', width='600px', title="",
                 options=False, no_hierarchy=False,
                 background='white', font='black'):
-    output = a.tag + '.html' if output is None else output
+    if output_path is None:
+        if a.tag is not None:
+            output_path = a.tag + '.html'
+        else:
+            output_path = a.uid + '.html'
     routes = a.get_routes()
     a2route = {v: k for k, v in routes.items()}
     graph = a.get_graph()
@@ -70,18 +74,19 @@ def plot_action(a, output=None, height='600px', width='600px', title="",
               "layout": {
                 "hierarchical": {
                     "enabled": true,
-                    "direction": "LR"
+                    "direction": "LR",
+                    "sortMethod": "directed"
                     }
                 }
             }
             """)
-    n.write_html(str(Path(output)))
+    n.write_html(str(Path(output_path)))
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('input', help='input')
-    parser.add_argument('-o', '--output', help='output', default=None)
+    parser.add_argument('input_path', help='input')
+    parser.add_argument('-o', '--output_path', help='output', default=None)
     parser.add_argument('--height', help='height', default='100%')
     parser.add_argument('--width', help='width', default='100%')
     parser.add_argument('--title', help='title', default='')
@@ -90,13 +95,15 @@ def main():
     parser.add_argument('--options', help='show options', action='store_true')
     parser.add_argument('--no_hierarchy', help='non hierarchical layout', action='store_true')
     args = vars(parser.parse_known_args()[0])  # arguments dictionary
-    p = Path(args['input'])
+    p = Path(args['input_path'])
     d = load(p)
     d.setdefault('metadata', {})
     d.setdefault('data', {})
     f = Factory()
     a = initialize(d['data'], f)
-    args.pop('input')
+    if args['output_path'] is None:
+        args['output_path'] = p.with_suffix('.html')
+    args.pop('input_path')
     plot_action(a, **args)
 
 

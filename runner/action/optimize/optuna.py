@@ -26,6 +26,7 @@ import copy
 import socket
 import platform
 import time
+import numpy as np
 
 import optuna
 
@@ -190,7 +191,9 @@ class Optuna(Optimize):
                     # Save Feature values to trial
                     if isinstance(a, Feature):
                         r = self.optuna_action.feature2route[a]
-                        trial.set_user_attr(f'features_{r}', a.value)
+                        v = a.value
+                        v = int(v) if isinstance(a.value, np.int32) else v
+                        trial.set_user_attr(f'features_{r}', v)
                     # Stop if subprocess failed
                     elif isinstance(a, Subprocess):
                         if a.result is None or a.result.returncode != 0:
@@ -283,12 +286,13 @@ class Optuna(Optimize):
                 else:
                     raise ValueError(kind)
             elif isinstance(v, Discrete):
-                if isinstance(t.low, int) and isinstance(t.high, int):
-                    s = (t.high - t.low) // (t.num - 1) if t.num != 1 else 1
-                else:
-                    s = (t.high - t.low) / (t.num - 1) if t.num != 1 else 1
                 if kind == 'suggested':
-                    value = trial.suggest_float(name=r, low=t.low, high=t.high, step=s)
+                    if isinstance(t.low, int) and isinstance(t.high, int):
+                        s = (t.high - t.low) // (t.num - 1) if t.num != 1 else 1
+                        value = trial.suggest_int(name=r, low=t.low, high=t.high, step=s)
+                    else:
+                        s = (t.high - t.low) / (t.num - 1) if t.num != 1 else 1
+                        value = trial.suggest_float(name=r, low=t.low, high=t.high, step=s)
                     v.low, v.high, v.num = value, value, 1
                 elif kind == 'optimized':
                     value = trial.user_attrs[f'features_{r}']

@@ -5,13 +5,14 @@
 
 import re
 from pathlib import Path
+import logging
 
 from runner.action.set.file.file import File
 
 
 class Regex(File):
     def __init__(self, pattern, path, value_type='str', read_type='line',
-                 num='all', route='.~~', **kwargs):
+                 num=0, route='.~~', **kwargs):
         super().__init__(**kwargs)
         self.pattern = pattern
         self.path = path
@@ -23,9 +24,9 @@ class Regex(File):
     str_to_type = {'str': str, 'int': int, 'float': float, 'bool': bool}
 
     def post_call(self, *args, **kwargs):
-        p = Path(self.path).resolve()
-        t = self.str_to_type[self.value_type]
-        rs = []
+        p = Path(self.path)
+        t = self.str_to_type[self.value_type]  # type
+        rs = []  # results
         with open(p) as f:
             if self.read_type == 'line':
                 for line in f:
@@ -37,18 +38,13 @@ class Regex(File):
                 raise ValueError(self.read_type)
         if len(rs) == 0:
             v = None
-        elif len(rs) == 1:
-            v = t(rs[0].strip())
-        else:
+            logging.warning(f'No objects found with pattern {self.pattern}')
+        elif isinstance(self.num, list):
+            v = [t(rs[x].strip()) for x in self.num]
+        elif isinstance(self.num, int):
+            v = t(rs[self.num].strip())
+        elif self.num is None:
             v = [t(x.strip()) for x in rs]
-        if isinstance(v, list):
-            if isinstance(self.num, list):
-                self.get_routes()[self.route].value = [v[x] for x in self.num]
-            elif isinstance(self.num, int):
-                self.get_routes()[self.route].value = v[self.num]
-            elif self.num == 'all':
-                self.get_routes()[self.route].value = v
-            else:
-                raise ValueError(self.num)
         else:
-            self.get_routes()[self.route].value = v
+            raise ValueError(self.num)
+        self.get_routes()[self.route].value = v
