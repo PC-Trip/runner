@@ -44,13 +44,13 @@ def set_logging(metadata):
     logging.info(f'log level: {metadata["log_level"]}')
 
 
-def initialize(data, fac):
+def initialize(data, fct):
     if isinstance(data, dict):
         for k, v in data.items():
             if k != 'class':
-                data[k] = initialize(v, fac)
+                data[k] = initialize(v, fct)
         try:
-            data = fac(data)
+            data = fct(data)
         except factory.FactoryValueError as e:
             logging.debug(e)
         except factory.FactoryKeyError as e:
@@ -59,11 +59,11 @@ def initialize(data, fac):
             logging.debug(e)
     elif isinstance(data, list):
         for i, v in enumerate(data):
-            data[i] = initialize(v, fac)
+            data[i] = initialize(v, fct)
     elif isinstance(data, str) and data.startswith('/'):
         p = Path(data[1:]).resolve()
         d = load(p)
-        data = initialize(d['data'], fac)
+        data = initialize(d['data'], fct)
     return data
 
 
@@ -93,8 +93,7 @@ def main():
     i = parse_input()
     set_logging(i['metadata'])
     logging.info(f'input: {i}')
-    fac = factory.Factory()
-    action = initialize(i['data'], fac)
+    action = initialize(i['data'], factory.Factory())
     action()
 
 

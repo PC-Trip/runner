@@ -8,4 +8,4 @@ class Value(Set):
         self.route = route
 
     def post_call(self, *args, **kwargs):
-        self.get_routes()[self.route].value = self.value
+        self.set(self.route, self.value)

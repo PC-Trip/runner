@@ -33,7 +33,6 @@ import optuna
 from runner.action.optimize.optimize import Optimize
 from runner.action.feature.feature import Feature
 from runner.action.run.subprocess import Subprocess
-from runner.action.set.value import Value
 from runner.action.set.continuous import Continuous
 from runner.action.set.categorical import Categorical
 from runner.action.set.discrete import Discrete
@@ -259,18 +258,20 @@ class Optuna(Optimize):
             g = self.get_graph()
             for p, cs in g.items():
                 if isinstance(p, (Continuous, Discrete, Categorical)):
-                    self.variable2template.setdefault(p, copy.deepcopy(p))
+                    self.variable2template.setdefault(p, copy.copy(p))
                 for c in cs:
                     if isinstance(c, (Continuous, Discrete, Categorical)):
-                        self.variable2template.setdefault(c, copy.deepcopy(c))
-        if self.parameters is None:
-            self.parameters = [k for k, v in self.get_routes().items()
-                               if isinstance(v, Feature)]
-        if self.feature2route is None:
-            self.feature2route = {v: k for k, v in self.get_routes().items()
-                                  if isinstance(v, Feature)}
+                        self.variable2template.setdefault(c, copy.copy(c))
+        if self.parameters is None or self.feature2route is None:
+            routes = self.get_routes()
+            if self.parameters is None:
+                self.parameters = [k for k, v in routes.items()
+                                   if isinstance(v, Feature)]
+            if self.feature2route is None:
+                self.feature2route = {v: k for k, v in routes.items()
+                                      if isinstance(v, Feature)}
         for v, t in self.variable2template.items():
-            f = v.get_routes()[v.route]  # Feature
+            f = v.get_action(v.route)  # Feature
             r = self.feature2route[f]  # Route to Feature
             if r not in set(self.parameters):  # Replace parameters only
                 continue
@@ -403,6 +404,8 @@ class Optuna(Optimize):
                 study.trials_dataframe().to_excel(p / 'data.xlsx')
             except Exception as e:
                 print(e)
+        if not self.do_plot:
+            return
         # Pareto front
         if self.do_plot_pareto:
             if len(self.objectives) > 1:

@@ -47,4 +47,4 @@ class Regex(File):
             v = [t(x.strip()) for x in rs]
         else:
             raise ValueError(self.num)
-        self.get_routes()[self.route].value = v
+        self.set(self.route, v)

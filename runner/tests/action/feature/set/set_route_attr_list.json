@@ -1,0 +1,10 @@
+{
+  "metadata": {
+    "log_level": "DEBUG",
+    "log_path": null
+  },
+  "data": {"class": "Feature", "value": [1, [2, 3], 4], "sub_actions": [
+    {"class": "Value", "value": 42, "route": ".~~~value.1.0"},
+    {"class": "GetFileTemplate", "template": "$.~~~value.1.0$", "path": "set_route_attr_list.txt"}
+  ]}
+}

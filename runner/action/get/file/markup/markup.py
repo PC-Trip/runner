@@ -9,13 +9,13 @@ class Markup(File):
         super().__init__(**kwargs)
 
     @staticmethod
-    def update(d, mapping, routes, pattern):
+    def update(d, mapping, action, pattern):
         if isinstance(mapping, dict):
             if not isinstance(d, dict):
                 raise ValueError(f'Bad mapping {d}, {mapping}')
             for k, v in mapping.items():
                 if isinstance(v, dict):
-                    d[k] = Markup.update(d.get(k, {}), v, routes, pattern)
+                    d[k] = Markup.update(d.get(k, {}), v, action, pattern)
                 elif isinstance(v, list):
                     u = d.get(k, [])
                     if isinstance(u, list):
@@ -23,15 +23,15 @@ class Markup(File):
                             d[k] = v
                         for i, x in enumerate(v):
                             if isinstance(x, dict):
-                                d[k][i] = Markup.update(d[k][i], x, routes, pattern)
+                                d[k][i] = Markup.update(d[k][i], x, action, pattern)
                             elif isinstance(x, list):
-                                d[k][i] = Markup.update(d[k][i], x, routes, pattern)
+                                d[k][i] = Markup.update(d[k][i], x, action, pattern)
                             elif x is not None:
-                                d[k][i] = Markup.substitute(routes, x, pattern)
+                                d[k][i] = Markup.substitute(action, x, pattern)
                     else:
                         raise ValueError(f'Bad mapping {u}, {d}, {mapping}')
                 else:
-                    d[k] = Markup.substitute(routes, v, pattern)
+                    d[k] = Markup.substitute(action, v, pattern)
         elif isinstance(mapping, list):
             if not isinstance(d, list):
                 raise ValueError(f'Bad mapping {d}, {mapping}')
@@ -39,18 +39,18 @@ class Markup(File):
                 d = deepcopy(mapping)
             for i, x in enumerate(mapping):
                 if isinstance(x, dict):
-                    d[i] = Markup.update(d[i], x, routes, pattern)
+                    d[i] = Markup.update(d[i], x, action, pattern)
                 elif isinstance(x, list):
-                    d[i] = Markup.update(d[i], x, routes, pattern)
+                    d[i] = Markup.update(d[i], x, action, pattern)
                 elif x is not None:
-                    d[i] = Markup.substitute(routes, x, pattern)
+                    d[i] = Markup.substitute(action, x, pattern)
         return d
 
     @staticmethod
-    def substitute(routes, template, pattern='\$[^\s$]*\$'):
+    def substitute(action, template, pattern='\$[^\s$]*\$'):
         if not isinstance(template, str):
             return template
-        t = Template.substitute(routes, template, pattern)
+        t = Template.substitute(action, template, pattern)
         if t == 'True':
             t = True
         elif t == 'False':

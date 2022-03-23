@@ -19,13 +19,8 @@ class Equation(Variable):
         self.route = route
 
     def post_call(self, *args, **kwargs):
-        routes = self.get_routes()
-        r = Template.substitute(routes, self.equation, self.pattern)
-        try:
-            v = eval(r)
-        except Exception as e:
-            v = None
-            logging.warning(f'Bad equation {self.equation} with arguments {r}')
+        r = Template.substitute(self, self.equation, self.pattern)
+        v = eval(r)
         if isinstance(v, str):
             if v.isdigit():
                 v = int(v)
@@ -34,4 +29,4 @@ class Equation(Variable):
                     v = float(v)
                 except ValueError:
                     pass
-        routes[self.route].value = v
+        self.set(self.route, v)

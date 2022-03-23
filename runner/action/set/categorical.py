@@ -10,4 +10,4 @@ class Categorical(Variable):
         self.route = route
 
     def post_call(self, *args, **kwargs):
-        self.get_routes()[self.route].value = np.random.choice(self.choices)
+        self.set(self.route, np.random.choice(self.choices))

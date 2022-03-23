@@ -173,6 +173,98 @@ class Action:
     def post_call(self, *args, **kwargs):
         pass
 
+    def search_action(self, path):
+        sup, loc, sub = path.split('~')
+        a = self
+        if loc == '':  # Local route
+            # Go super
+            if sup != '':
+                ts = sup.split('.')[:-1]  # without last
+                for t in reversed(ts):  # tag
+                    if a.sup_action is not None:
+                        a = a.sup_action
+                    else:
+                        raise ValueError(f'No super action with tag {t} '
+                                         f'in {a.tag} with route {path}')
+            # Go sub
+            if sub != '':
+                ts = sub.split('.')[1:]  # without first
+                for t in ts:  # tag
+                    if t == '':
+                        if len(a.sub_actions) == 1:
+                            a = a.sub_actions[0]
+                        else:
+                            raise ValueError(f'Sub actions conflict with empty tag '
+                                             f'in {a.tag} with path {path}')
+                    else:
+                        flag = False
+                        for s in a.sub_actions:
+                            if s.tag == t:
+                                a = s
+                                flag = True
+                                break
+                        if not flag:
+                            raise ValueError(f'No sub action with tag {t} '
+                                             f'in {a.tag} with path {path}')
+        else:  # Global route
+            def search(action, prev_action, tag):
+                if action.tag == tag:
+                    return action
+                else:
+                    # Search super
+                    s = action.super_action
+                    if prev_action is not None and s is not None:  # Non root
+                        if s != prev_action:  # Not from super
+                            action = search(s, action, tag)
+                    # Search sub
+                    for s in action.sub_actions:
+                        if s != prev_action:  # Not from sub
+                            action = search(s, action, tag)
+                    if action.tag != tag:
+                        raise ValueError(f'No global action with tag {tag} in path {path}')
+
+            a = search(a, None, loc)  # Global to Local
+            a = a.search_action(sup + '~~' + sub)  # Search Local
+        return a
+
+    @staticmethod
+    def parse_route(route):
+        ts = route.split('~')
+        if len(ts) == 3:
+            path, attr = route, 'value'
+        elif len(ts) == 4:
+            path, attr = '~'.join(ts[:-1]), ts[-1]
+        else:
+            raise ValueError(f'Bad route: {route}')
+        return path, attr
+
+    def get(self, route):
+        path, attr = self.parse_route(route)
+        ts = [int(x) if str.isdigit(x) else x.replace("'", "")
+              for x in attr.split('.')]
+        a = self.search_action(path)
+        a = getattr(a, ts[0])
+        for t in ts[1:]:
+            a = a[t]
+        return a
+
+    def set(self, route, value):
+        path, attr = self.parse_route(route)
+        ts = [int(x) if str.isdigit(x) else x.replace("'", "")
+              for x in attr.split('.')]
+        a = self.search_action(path)
+        if len(ts) == 1:
+            setattr(a, ts[0], value)
+        else:
+            a = getattr(a, ts[0], value)
+            for t in ts[1:-1]:
+                a = a[t]
+            a[ts[-1]] = value
+
+    def get_action(self, route):
+        path, attr = self.parse_route(route)
+        return self.search_action(path)
+
     def get_routes(self, routes=None, prev_action=None, route='~~', sep='.', def_tag=''):
         """Recursively get routes from the action to other activities
 

@@ -17,7 +17,7 @@ class Json(Markup):
         p = Path(self.path)
         with open(p) as f:
             d = json.load(f)
-        d = Markup.update(d, self.mapping, self.get_routes(), self.pattern)
+        d = Markup.update(d, self.mapping, self, self.pattern)
         p = Path(self.output)
         with open(p, 'w') as f:
             json.dump(d, f, indent=2)

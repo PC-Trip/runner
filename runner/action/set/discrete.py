@@ -16,4 +16,4 @@ class Discrete(Variable):
             self.low, self.high, self.num, endpoint=True))
         if isinstance(self.low, int) and isinstance(self.high, int):
             v = int(v)
-        self.get_routes()[self.route].value = v
+        self.set(self.route, v)

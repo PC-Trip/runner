@@ -22,7 +22,7 @@ class Foam(Markup):
     def post_call(self, *args, **kwargs):
         p = Path(self.path).resolve()
         d = self.load(p)
-        d = Markup.update(d, self.mapping, self.get_routes(), self.pattern)
+        d = Markup.update(d, self.mapping, self, self.pattern)
         dp = Path(self.output).resolve()
         dp.parent.mkdir(parents=True, exist_ok=True)
         self.dump(d, dp)

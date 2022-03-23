@@ -11,4 +11,4 @@ class Continuous(Variable):
         self.route = route
 
     def post_call(self, *args, **kwargs):
-        self.get_routes()[self.route].value = np.random.uniform(self.low, self.high)
+        self.set(self.route, np.random.uniform(self.low, self.high))

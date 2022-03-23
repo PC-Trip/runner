@@ -22,22 +22,19 @@ class Template(File):
                 p.unlink()
         else:
             t = self.template
-        t = Template.substitute(self.get_routes(), t, self.pattern)
+        t = Template.substitute(self, t, self.pattern)
         p = Path(self.path)
         with open(p, 'w') as f:
             f.write(t)
 
     @staticmethod
-    def substitute(routes, template, pattern='\$[^\s$]*\$'):
+    def substitute(action, template, pattern='\$[^\s$]*\$'):
         p = re.compile(pattern)
         m = p.search(template)
         while m is not None:
             route = ''.join([x for x in m.group(0)
-                             if x.isalnum() or x in ['.', '~', '_', '-']])
-            if route not in routes:
-                ks = '"\n"'.join(routes.keys())
-                raise ValueError(f'"{route}" is not in routes:\n"{ks}"')
-            value = str(routes[route].value)
+                             if x.isalnum() or x in ['.', '~', '_', '-', "'"]])
+            value = str(action.get(route))
             template = template[:m.start()] + value + template[m.end():]
             m = p.search(template)
         return template
