@@ -1,0 +1,8 @@
+{
+  "metadata": {
+    "log_level": "DEBUG",
+    "log_path": null
+  },
+  "data": {"class": "FeatureDiscreteFile", "low": -1, "high": 1,
+    "template": "discrete_file_template_.txt", "output_path": "discrete_file_template.txt"}
+}

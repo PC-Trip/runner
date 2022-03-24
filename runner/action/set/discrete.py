@@ -4,6 +4,16 @@ from runner.action.set.variable import Variable
 
 
 class Discrete(Variable):
+    """Discrete variable
+
+        low <= variable < high with step (high - low)/num or 1 (default)
+
+        Args:
+            low (float): low boundary
+            high (float): high boundary
+            num (int): number of steps
+            route (str): route to value (see Action)
+    """
     def __init__(self, low=0, high=1, num=None, route='.~~', **kwargs):
         super().__init__(**kwargs)
         self.low = low

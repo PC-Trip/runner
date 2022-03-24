@@ -1,0 +1,8 @@
+{
+  "metadata": {
+    "log_level": "DEBUG",
+    "log_path": null
+  },
+  "data": {"class": "FeatureCategoricalFile", "choices": ["red", "green", "blue"],
+    "template": "$.~~$", "output_path": "categorical_file.txt"}
+}

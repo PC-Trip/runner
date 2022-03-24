@@ -7,6 +7,6 @@
     "value": {"1": 1, "2": {"3": 2, "4": 3}, "5": 4}, "sub_actions": [
     {"class": "Value", "value": 42, "route": ".~~~value.'2'.'3'"},
     {"class": "GetFileTemplate", "template": "$.~~~value.'2'.'3'$",
-      "path": "set_route_attr_dict_num.txt"}
+      "output_path": "set_route_attr_dict_num.txt"}
   ]}
 }

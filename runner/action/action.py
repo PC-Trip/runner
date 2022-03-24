@@ -238,10 +238,19 @@ class Action:
             raise ValueError(f'Bad route: {route}')
         return path, attr
 
+    @staticmethod
+    def parse_attr(attr):
+        ts = []
+        for t in attr.split('.'):
+            if t.isdigit() or t.startswith('-') and t[1:].isdigit():
+                ts.append(int(t))
+            else:
+                ts.append(t.replace("'", ""))
+        return ts
+
     def get(self, route):
-        path, attr = self.parse_route(route)
-        ts = [int(x) if str.isdigit(x) else x.replace("'", "")
-              for x in attr.split('.')]
+        path, attr = Action.parse_route(route)
+        ts = Action.parse_attr(attr)
         a = self.search_action(path)
         a = getattr(a, ts[0])
         for t in ts[1:]:
@@ -249,9 +258,8 @@ class Action:
         return a
 
     def set(self, route, value):
-        path, attr = self.parse_route(route)
-        ts = [int(x) if str.isdigit(x) else x.replace("'", "")
-              for x in attr.split('.')]
+        path, attr = Action.parse_route(route)
+        ts = Action.parse_attr(attr)
         a = self.search_action(path)
         if len(ts) == 1:
             setattr(a, ts[0], value)

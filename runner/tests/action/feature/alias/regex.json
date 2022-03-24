@@ -1,0 +1,28 @@
+{
+  "metadata": {
+    "log_level": "DEBUG",
+    "log_path": null
+  },
+  "data": {"tag": "list", "class": "Feature", "sub_actions": [
+    {"class": "FeatureRegex", "tag": "regex_float_all",
+      "pattern": "-?\\d+\\.\\d+", "input_path": "input.txt",
+      "value_type": "float", "read_type": "line", "index": null},
+    {"class": "GetFileTemplate", "template": "$.~~.regex_float_all$",
+      "output_path": "output_float_all.txt"},
+    {"class": "FeatureRegex", "tag": "regex_float_index",
+      "pattern": "-?\\d+\\.\\d+", "input_path": "input.txt",
+      "value_type": "float", "read_type": "line", "index": 3},
+    {"class": "GetFileTemplate", "template": "$.~~.regex_float_index$",
+      "output_path": "output_float_index.txt"},
+    { "class": "FeatureRegex", "tag": "regex_float_indices",
+      "pattern": "-?\\d+\\.\\d+", "input_path": "input.txt",
+      "value_type": "float", "read_type": "line", "index": [3, 5]},
+    {"class": "GetFileTemplate", "template": "$.~~.regex_float_indices$",
+      "output_path": "output_float_indices.txt"},
+    {"tag": "regex_all", "class": "FeatureRegex",
+      "pattern": "-?\\d+\\.?\\d*", "input_path": "input.txt",
+      "value_type": "float", "read_type": "line", "index": null},
+    {"class": "GetFileTemplate", "template": "$.~~.regex_all$",
+      "output_path": "output_all.txt"}]
+  }
+}

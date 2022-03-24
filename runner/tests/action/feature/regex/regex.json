@@ -3,23 +3,23 @@
     "log_level": "DEBUG",
     "log_path": null
   },
-  "data": {"key": "list", "class": "Feature", "sub_actions": [
-    {"key": "regex_float_all", "class": "Feature", "sub_actions": [
-      {"class": "SetFileRegex", "pattern": "-?\\d+\\.\\d+", "path": "input.txt",
-        "value_type": "float", "read_type": "line", "num": null}]},
-    {"template": "$.~~.regex_float_all$", "path": "output_float_all.txt", "class": "GetFileTemplate"},
-    {"key": "regex_float_index", "class": "Feature", "sub_actions": [
-      {"class": "SetFileRegex", "pattern": "-?\\d+\\.\\d+", "path": "input.txt",
-        "value_type": "float", "read_type": "line", "num": 3},
-      {"template": "$.~~$", "path": "output_float_index.txt", "class": "GetFileTemplate"}]},
-    {"key": "regex_float_indices", "class": "Feature", "sub_actions": [
-      {"class": "SetFileRegex", "pattern": "-?\\d+\\.\\d+", "path": "input.txt",
-        "value_type": "float", "read_type": "line", "num": [3, 5]},
-      {"template": "$.~~$", "path": "output_float_indices.txt", "class": "GetFileTemplate"}]},
-    {"key": "regex_all", "class": "Feature", "sub_actions": [
-      {"class": "SetFileRegex", "pattern": "-?\\d+\\.?\\d*", "path": "input.txt",
-        "value_type": "float", "read_type": "line", "num": null},
-      {"template": "$.~~$", "path": "output_all.txt", "class": "GetFileTemplate"}]}
+  "data": {"tag": "list", "class": "Feature", "sub_actions": [
+    {"tag": "regex_float_all", "class": "Feature", "sub_actions": [
+      {"class": "SetFileRegex", "pattern": "-?\\d+\\.\\d+", "input_path": "input.txt",
+        "value_type": "float", "read_type": "line", "index": null}]},
+    {"class": "GetFileTemplate", "template": "$.~~.regex_float_all$", "output_path": "output_float_all.txt"},
+    {"tag": "regex_float_index", "class": "Feature", "sub_actions": [
+      {"class": "SetFileRegex", "pattern": "-?\\d+\\.\\d+", "input_path": "input.txt",
+        "value_type": "float", "read_type": "line", "index": 3},
+      {"class": "GetFileTemplate", "template": "$.~~$", "output_path": "output_float_index.txt"}]},
+    {"tag": "regex_float_indices", "class": "Feature", "sub_actions": [
+      {"class": "SetFileRegex", "pattern": "-?\\d+\\.\\d+", "input_path": "input.txt",
+        "value_type": "float", "read_type": "line", "index": [3, 5]},
+      {"class": "GetFileTemplate", "template": "$.~~$", "output_path": "output_float_indices.txt"}]},
+    {"tag": "regex_all", "class": "Feature", "sub_actions": [
+      {"class": "SetFileRegex", "pattern": "-?\\d+\\.?\\d*", "input_path": "input.txt",
+        "value_type": "float", "read_type": "line", "index": null},
+      {"class": "GetFileTemplate", "template": "$.~~$", "output_path": "output_all.txt"}]}
   ]
   }
 }

@@ -9,42 +9,42 @@ class Markup(File):
         super().__init__(**kwargs)
 
     @staticmethod
-    def update(d, mapping, action, pattern):
-        if isinstance(mapping, dict):
-            if not isinstance(d, dict):
-                raise ValueError(f'Bad mapping {d}, {mapping}')
-            for k, v in mapping.items():
+    def update(action, layout, template, pattern):
+        if isinstance(template, dict):
+            if not isinstance(layout, dict):
+                raise ValueError(f'Bad {layout}, {template}')
+            for k, v in template.items():
                 if isinstance(v, dict):
-                    d[k] = Markup.update(d.get(k, {}), v, action, pattern)
+                    layout[k] = Markup.update(action, layout.get(k, {}), v, pattern)
                 elif isinstance(v, list):
-                    u = d.get(k, [])
+                    u = layout.get(k, [])
                     if isinstance(u, list):
                         if len(u) != len(v):
-                            d[k] = v
+                            layout[k] = v
                         for i, x in enumerate(v):
                             if isinstance(x, dict):
-                                d[k][i] = Markup.update(d[k][i], x, action, pattern)
+                                layout[k][i] = Markup.update(action, layout[k][i], x, pattern)
                             elif isinstance(x, list):
-                                d[k][i] = Markup.update(d[k][i], x, action, pattern)
+                                layout[k][i] = Markup.update(action, layout[k][i], x, pattern)
                             elif x is not None:
-                                d[k][i] = Markup.substitute(action, x, pattern)
+                                layout[k][i] = Markup.substitute(action, x, pattern)
                     else:
-                        raise ValueError(f'Bad mapping {u}, {d}, {mapping}')
+                        raise ValueError(f'Bad {u}, {layout}, {template}')
                 else:
-                    d[k] = Markup.substitute(action, v, pattern)
-        elif isinstance(mapping, list):
-            if not isinstance(d, list):
-                raise ValueError(f'Bad mapping {d}, {mapping}')
-            if len(mapping) != len(d):
-                d = deepcopy(mapping)
-            for i, x in enumerate(mapping):
+                    layout[k] = Markup.substitute(action, v, pattern)
+        elif isinstance(template, list):
+            if not isinstance(layout, list):
+                raise ValueError(f'Bad {layout}, {template}')
+            if len(template) != len(layout):
+                layout = deepcopy(template)
+            for i, x in enumerate(template):
                 if isinstance(x, dict):
-                    d[i] = Markup.update(d[i], x, action, pattern)
+                    layout[i] = Markup.update(action, layout[i], x, pattern)
                 elif isinstance(x, list):
-                    d[i] = Markup.update(d[i], x, action, pattern)
+                    layout[i] = Markup.update(action, layout[i], x, pattern)
                 elif x is not None:
-                    d[i] = Markup.substitute(action, x, pattern)
-        return d
+                    layout[i] = Markup.substitute(action, x, pattern)
+        return layout
 
     @staticmethod
     def substitute(action, template, pattern='\$[^\s$]*\$'):

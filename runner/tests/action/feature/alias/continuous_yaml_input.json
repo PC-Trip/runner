@@ -1,0 +1,9 @@
+{
+  "metadata": {
+    "log_level": "DEBUG",
+    "log_path": null
+  },
+  "data": {"class": "FeatureContinuousYaml", "low": -1, "high": 1,
+    "template": {"value": "$.~~$"}, "input_path": "continuous_yaml_input_in_.yaml",
+    "output_path": "continuous_yaml_input_out.yaml"}
+}

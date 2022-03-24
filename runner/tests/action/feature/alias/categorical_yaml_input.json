@@ -1,0 +1,9 @@
+{
+  "metadata": {
+    "log_level": "DEBUG",
+    "log_path": null
+  },
+  "data": {"class": "FeatureCategoricalYaml", "choices": ["red", "green", "blue"],
+    "template": {"value": "$.~~$"}, "input_path": "categorical_yaml_input_in_.yaml",
+    "output_path": "categorical_yaml_input_out.yaml"}
+}

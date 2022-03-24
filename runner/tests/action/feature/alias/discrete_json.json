@@ -1,0 +1,8 @@
+{
+  "metadata": {
+    "log_level": "DEBUG",
+    "log_path": null
+  },
+  "data": {"class": "FeatureDiscreteJson", "low": -1, "high": 1,
+    "template": {"value": "$.~~$"}, "output_path": "discrete_json_out.json"}
+}

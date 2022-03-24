@@ -1,0 +1,9 @@
+{
+  "metadata": {
+    "log_level": "DEBUG",
+    "log_path": null
+  },
+  "data": {"class": "FeatureDiscreteYaml", "low": -1, "high": 1,
+    "template": {"value": "$.~~$"}, "input_path": "discrete_yaml_input_in_.yaml",
+    "output_path": "discrete_yaml_input_out.yaml"}
+}

@@ -12,12 +12,12 @@
     "objectives": {"~~.y":  "minimize"},
     "copies": ["input.txt", "script.py"],
     "sub_actions": [
-      {"key": "x", "class": "Feature", "sub_actions": [
+      {"tag": "x", "class": "Feature", "sub_actions": [
         {"class": "Continuous", "low": -2, "high": 2},
-        {"class": "GetFileTemplate", "template": "x $.~~$", "path": "input.txt"}]},
+        {"class": "GetFileTemplate", "template": "x $.~~$", "output_path": "input.txt"}]},
       {"class": "Subprocess", "subprocess_kwargs": {"args": ["python", "script.py"]}},
-      {"key": "y", "class": "Feature", "sub_actions": [
-        {"class": "SetFileRegex", "pattern": "-?\\d+\\.\\d+", "path": "output.txt", "value_type": "float"}]}
+      {"tag": "y", "class": "Feature", "sub_actions": [
+        {"class": "SetFileRegex", "pattern": "-?\\d+\\.\\d+", "input_path": "output.txt", "value_type": "float"}]}
     ]
   }
 }

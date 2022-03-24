@@ -11,20 +11,30 @@ from runner.action.set.file.file import File
 
 
 class Regex(File):
-    def __init__(self, pattern, path, value_type='str', read_type='line',
-                 num=0, route='.~~', **kwargs):
+    """Set from file with regex pattern
+
+    Args:
+        pattern (str): regex expression for wildcards
+        input_path (str): path to input file
+        value_type (str): type of input value(s)
+        read_type (str): "line" -read file by line, "all" - entire file
+        index (int or list): index(es) in list of found values, None - get all values
+        route (str): route to value (see Action)
+    """
+    def __init__(self, pattern, input_path, value_type='str', read_type='line',
+                 index=0, route='.~~', **kwargs):
         super().__init__(**kwargs)
         self.pattern = pattern
-        self.path = path
+        self.input_path = input_path
         self.value_type = value_type
         self.read_type = read_type
-        self.num = num
+        self.index = index
         self.route = route
 
     str_to_type = {'str': str, 'int': int, 'float': float, 'bool': bool}
 
     def post_call(self, *args, **kwargs):
-        p = Path(self.path)
+        p = Path(self.input_path)
         t = self.str_to_type[self.value_type]  # type
         rs = []  # results
         with open(p) as f:
@@ -39,12 +49,12 @@ class Regex(File):
         if len(rs) == 0:
             v = None
             logging.warning(f'No objects found with pattern {self.pattern}')
-        elif isinstance(self.num, list):
-            v = [t(rs[x].strip()) for x in self.num]
-        elif isinstance(self.num, int):
-            v = t(rs[self.num].strip())
-        elif self.num is None:
+        elif isinstance(self.index, list):
+            v = [t(rs[x].strip()) for x in self.index]
+        elif isinstance(self.index, int):
+            v = t(rs[self.index].strip())
+        elif self.index is None:
             v = [t(x.strip()) for x in rs]
         else:
-            raise ValueError(self.num)
+            raise ValueError(self.index)
         self.set(self.route, v)

@@ -1,0 +1,8 @@
+{
+  "metadata": {
+    "log_level": "DEBUG",
+    "log_path": null
+  },
+  "data": {"class": "FeatureCategoricalJson", "choices": ["red", "green", "blue"],
+    "template": {"value": "$.~~$"}, "output_path": "categorical_json_out.json"}
+}

@@ -8,34 +8,35 @@ from runner.action.get.file.markup.markup import Markup
 
 
 class Foam(Markup):
-    def __init__(self, path, mapping, pattern='\$[^\s$]*\$', output=None,
-                 **kwargs):
+    def __init__(self, template, pattern='\$[^\s$]*\$', input_path=None,
+                 output_path=None, **kwargs):
         super().__init__(**kwargs)
-        self.path = path
-        self.mapping = mapping
-        for k in list(self.mapping.keys()):
+        self.template = template
+        for k in list(self.template.keys()):
             if k == '':
-                self.mapping[None] = self.mapping.pop(k)
+                self.template[None] = self.template.pop(k)
         self.pattern = pattern
-        self.output = path if output is None else output
+        self.input_path = input_path
+        self.output_path = input_path if output_path is None else output_path
+        if self.output_path is None:
+            raise ValueError(f"Output or input file doesn't set!")
 
     def post_call(self, *args, **kwargs):
-        p = Path(self.path).resolve()
-        d = self.load(p)
-        d = Markup.update(d, self.mapping, self, self.pattern)
-        dp = Path(self.output).resolve()
-        dp.parent.mkdir(parents=True, exist_ok=True)
-        self.dump(d, dp)
+        layout = self.load(self.input_path)
+        layout = Markup.update(self, layout, self.template, self.pattern)
+        self.dump(layout, self.output_path)
 
     @staticmethod
     def load(path):
-        d = {}
-        with open(path) as f:
-            name, kvs = Foam.load_object(f)
-            while name is not None or len(kvs) > 0:
-                d[name] = kvs
+        layout = {}
+        if path is not None:
+            p = Path(path)
+            with open(p) as f:
                 name, kvs = Foam.load_object(f)
-        return d
+                while name is not None or len(kvs) > 0:
+                    layout[name] = kvs
+                    name, kvs = Foam.load_object(f)
+        return layout
 
     @staticmethod
     def load_object(f, name=None):
@@ -81,6 +82,8 @@ class Foam(Markup):
 
     @staticmethod
     def dump(dictionary, path):
+        p = Path(path).resolve()
+        p.parent.mkdir(parents=True, exist_ok=True)
         with open(path, 'w') as f:
             for name, kvs in dictionary.items():
                 Foam.dump_object(name, kvs, f)

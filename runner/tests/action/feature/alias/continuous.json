@@ -1,0 +1,9 @@
+{
+  "metadata": {
+    "log_level": "DEBUG",
+    "log_path": null
+  },
+  "data": {"class": "FeatureContinuous", "low": -1, "high": 1, "sub_actions": [
+    {"class": "GetFileTemplate", "template": "$.~~$", "output_path": "continuous.txt"}
+  ]}
+}

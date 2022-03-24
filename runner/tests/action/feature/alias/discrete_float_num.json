@@ -1,0 +1,9 @@
+{
+  "metadata": {
+    "log_level": "DEBUG",
+    "log_path": null
+  },
+  "data": {"class": "FeatureDiscrete", "low": -1.0, "high": 1.0, "num": 5, "sub_actions": [
+    {"class": "GetFileTemplate", "template": "$.~~$", "output_path": "discrete_float_num.txt"}
+  ]}
+}

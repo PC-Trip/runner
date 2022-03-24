@@ -3,11 +3,15 @@
     "log_level": "DEBUG",
     "log_path": null
   },
-  "data": {"key": "number", "class": "Feature", "sub_actions": [
+  "data": {"tag": "number", "class": "Feature", "sub_actions": [
     {"value": 42, "class": "Value"},
-    {"template": "$.~~$ $.~~$", "path": "value_template_string.txt", "class": "GetFileTemplate"},
-    {"template": "value_template.txt", "path": "value_template_file.txt", "class": "GetFileTemplate"},
-    {"template": "", "path": "value_template_empty_string.txt", "class": "GetFileTemplate"},
-    {"template": "value_template_empty.txt", "path": "value_template_empty_file.txt", "class": "GetFileTemplate"}]
+    {"class": "GetFileTemplate", "template": "$.~~$ $.~~$",
+      "output_path": "value_template_string.txt"},
+    { "class": "GetFileTemplate", "template": "value_template.txt",
+      "output_path": "value_template_file.txt"},
+    {"class": "GetFileTemplate", "template": "",
+      "output_path": "value_template_empty_string.txt"},
+    {"class": "GetFileTemplate", "template": "value_template_empty.txt",
+      "output_path": "value_template_empty_file.txt"}]
   }
 }

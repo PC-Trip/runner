@@ -5,6 +5,6 @@
   },
   "data": {"class": "Feature", "sub_actions": [
     {"class": "Value", "value": 42},
-    {"class": "GetFileTemplate", "template": "$.~~$", "path": "set_default.txt"}
+    {"class": "GetFileTemplate", "template": "$.~~$", "output_path": "set_default.txt"}
   ]}
 }

@@ -5,6 +5,6 @@
   },
   "data": {"class": "Feature", "sub_actions": [
     {"class": "Value", "value": 42, "route": ".~~~value2"},
-    {"class": "GetFileTemplate", "template": "$.~~~value2$", "path": "set_route_attr.txt"}
+    {"class": "GetFileTemplate", "template": "$.~~~value2$", "output_path": "set_route_attr.txt"}
   ]}
 }

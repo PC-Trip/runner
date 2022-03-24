@@ -1,0 +1,9 @@
+{
+  "metadata": {
+    "log_level": "DEBUG",
+    "log_path": null
+  },
+  "data": {"class": "FeatureContinuousJson", "low": -1, "high": 1,
+    "template": {"value": "$.~~$"}, "input_path": "continuous_json_input_in_.json",
+    "output_path": "continuous_json_input_out.json"}
+}

@@ -3,21 +3,21 @@
     "log_level": "DEBUG",
     "log_path": null
   },
-  "data": {"key": "list", "class": "Feature", "sub_actions": [
-    {"key": "value_int", "class": "Feature", "sub_actions": [
+  "data": {"tag": "list", "class": "Feature", "sub_actions": [
+    {"tag": "value_int", "class": "Feature", "sub_actions": [
       {"value": -42, "class": "Value"}]},
-    {"key": "value_float", "class": "Feature", "sub_actions": [
+    {"tag": "value_float", "class": "Feature", "sub_actions": [
       {"value": -3.14, "class": "Value"}]},
-    {"key": "value_string", "class": "Feature", "sub_actions": [
+    {"tag": "value_string", "class": "Feature", "sub_actions": [
       {"value": "green", "class": "Value"}]},
-    {"key": "value_bool", "class": "Feature", "sub_actions": [
+    {"tag": "value_bool", "class": "Feature", "sub_actions": [
       {"value": true, "class": "Value"}]},
-    {"key": "value_list_item_2", "class": "Feature", "sub_actions": [
+    {"tag": "value_list_item_2", "class": "Feature", "sub_actions": [
       {"value": -2, "class": "Value"}]},
-    {"key": "value_sub_list_item_4", "class": "Feature", "sub_actions": [
+    {"tag": "value_sub_list_item_4", "class": "Feature", "sub_actions": [
       {"value": -8, "class": "Value"}]},
-    {"path": "input", "output": "output", "class": "GetFileFoam",
-      "mapping": {"dict": {
+    {"input_path": "input", "output_path": "output", "class": "GetFileFoam",
+      "template": {"dict": {
         "int": "$.~~.value_int$",
         "float": "$.~~.value_float$",
         "string": "$.~~.value_string$",

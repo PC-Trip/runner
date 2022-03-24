@@ -5,12 +5,20 @@ from runner.action.get.file.file import File
 
 
 class Template(File):
-    def __init__(self, template, path=None, pattern='\$[^\s$]*\$',
-                 remove_template=False, **kwargs):
+    """Write to file with template
+
+    Args:
+        template (str): template or path to template file
+        pattern (str): regex expression for wildcards
+        output_path (str): path to output file
+        remove_template (bool): remove template file if it exists
+    """
+    def __init__(self, template, pattern='\$[^\s$]*\$',
+                 output_path=None, remove_template=False, **kwargs):
         super().__init__(**kwargs)
         self.template = template
-        self.path = template if path is None else path
         self.pattern = pattern
+        self.output_path = template if output_path is None else output_path
         self.remove_template = remove_template
 
     def post_call(self, *args, **kwargs):
@@ -23,7 +31,7 @@ class Template(File):
         else:
             t = self.template
         t = Template.substitute(self, t, self.pattern)
-        p = Path(self.path)
+        p = Path(self.output_path)
         with open(p, 'w') as f:
             f.write(t)
 

@@ -1,0 +1,8 @@
+{
+  "metadata": {
+    "log_level": "DEBUG",
+    "log_path": null
+  },
+  "data": {"class": "FeatureContinuousFile", "low": -1, "high": 1,
+    "template": "continuous_file_template_.txt", "output_path": "continuous_file_template.txt"}
+}
