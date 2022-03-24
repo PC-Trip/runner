@@ -30,6 +30,7 @@ from runner.action.feature.feature_categorical_json import FeatureCategoricalJso
 from runner.action.feature.feature_categorical_yaml import FeatureCategoricalYaml
 from runner.action.feature.feature_categorical_foam import FeatureCategoricalFoam
 from runner.action.feature.feature_regex import FeatureRegex
+from runner.action.feature.feature_equation import FeatureEquation
 
 
 class FactoryClassError(Exception):
@@ -60,34 +61,50 @@ class Factory:
     def __init__(self):
         self.string2class = {
             'Action': Action,
+            'A': Action,
             'Subprocess': Subprocess,
+            'P': Subprocess,
             'Feature': Feature,
+            'F': Feature,
             'Continuous': Continuous,
+            'SC': Continuous,
             'Discrete': Discrete,
+            'SD': Discrete,
             'Categorical': Categorical,
+            'ST': Categorical,
             'Equation': Equation,
+            'SE': Equation,
             'Value': Value,
             'SetFileRegex': SetFileRegex,
+            'SR': SetFileRegex,
             'GetFileJson': GetFileJson,
+            'GJ': GetFileJson,
             'GetFileFoam': GetFileFoam,
             'GetFileTemplate': GetFileTemplate,
+            'GF': GetFileTemplate,
             'Optuna': Optuna,
             'FeatureContinuous': FeatureContinuous,
+            'FC': FeatureContinuous,
             'FeatureContinuousFile': FeatureContinuousFile,
             'FeatureContinuousJson': FeatureContinuousJson,
             'FeatureContinuousYaml': FeatureContinuousYaml,
             'FeatureContinuousFoam': FeatureContinuousFoam,
             'FeatureDiscrete': FeatureDiscrete,
+            'FD': FeatureDiscrete,
             'FeatureDiscreteFile': FeatureDiscreteFile,
             'FeatureDiscreteJson': FeatureDiscreteJson,
             'FeatureDiscreteYaml': FeatureDiscreteYaml,
             'FeatureDiscreteFoam': FeatureDiscreteFoam,
             'FeatureCategorical': FeatureCategorical,
+            'FT': FeatureCategorical,
             'FeatureCategoricalFile': FeatureCategoricalFile,
             'FeatureCategoricalJson': FeatureCategoricalJson,
             'FeatureCategoricalYaml': FeatureCategoricalYaml,
             'FeatureCategoricalFoam': FeatureCategoricalFoam,
-            'FeatureRegex': FeatureRegex
+            'FeatureRegex': FeatureRegex,
+            'FR': FeatureRegex,
+            'FeatureEquation': FeatureEquation,
+            'FE': FeatureEquation
         }
 
     def __call__(self, obj):
