@@ -1,0 +1,27 @@
+metadata: 
+  log_level: DEBUG
+  log_path: ~
+data:
+  class: A
+  sub_actions:
+    - class: FR
+      tag: line
+      pattern: -?\d+\.?\d*  # float or int
+      input_path: input_line.txt
+      value_type: float
+      read_type: line
+      index: ~
+      line_index: 2
+      line_start: 14
+    - class: FE
+      tag: line_max
+      equation: np.max($..~~.line$)
+    - class: FE
+      tag: line_min
+      equation: np.min($..~~.line$)
+    - class: FE
+      tag: line_mean
+      equation: np.mean($..~~.line$)
+    - class: GF
+      template: "$.~~.line$\n$.~~.line_max$\n$.~~.line_min$\n$.~~.line_mean$"
+      output_path: output_line.txt

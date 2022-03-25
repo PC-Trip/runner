@@ -191,7 +191,7 @@ class Optuna(Optimize):
                     if isinstance(a, Feature):
                         r = self.optuna_action.feature2route[a]
                         v = a.value
-                        v = int(v) if isinstance(a.value, np.int32) else v
+                        v = int(v) if isinstance(a.value, (np.int32, np.int64)) else v
                         trial.set_user_attr(f'features_{r}', v)
                     # Stop if subprocess failed
                     elif isinstance(a, Subprocess):

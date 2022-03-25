@@ -26,3 +26,19 @@ def test_regex(run):
         expected = values
         assert len(actual) == len(expected)
         assert all([x == y for x, y in zip(actual, expected)])
+
+
+@pytest.mark.parametrize("run", ["regex_line.yml"], indirect=True)
+def test_regex(run):
+    assert run == 0
+    expected = [9.0, -8.99999999988, 8.99999999928, 8.99999999753, 8.99999999361,
+                -8.99999998612, -8.99999997328, -8.99999995298, 8.99999992282,
+                8.99999988015, 8.99999982215]
+    with open("output_line.txt") as f:
+        lines = [x for x in f]
+        actual = [float(x) for x in lines[0].strip()[1:-1].split(',')]
+        assert len(actual) == len(expected)
+        assert all([x == pytest.approx(y) for x, y in zip(actual, expected)])
+        assert float(lines[1].strip()) == pytest.approx(max(expected))
+        assert float(lines[2].strip()) == pytest.approx(min(expected))
+        assert float(lines[3].strip()) == pytest.approx(sum(expected) / len(expected))

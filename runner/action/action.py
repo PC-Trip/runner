@@ -174,9 +174,9 @@ class Action:
         pass
 
     def search_action(self, path):
-        sup, loc, sub = path.split('~')
+        sup, tag, sub = path.split('~')
         a = self
-        if loc == '':  # Local route
+        if tag == '':  # Local path
             # Go super
             if sup != '':
                 ts = sup.split('.')[:-1]  # without last
@@ -185,7 +185,7 @@ class Action:
                         a = a.sup_action
                     else:
                         raise ValueError(f'No super action with tag {t} '
-                                         f'in {a.tag} with route {path}')
+                                         f'in {a.tag} with path {path}')
             # Go sub
             if sub != '':
                 ts = sub.split('.')[1:]  # without first
@@ -206,24 +206,30 @@ class Action:
                         if not flag:
                             raise ValueError(f'No sub action with tag {t} '
                                              f'in {a.tag} with path {path}')
-        else:  # Global route
+        else:  # Global path
             def search(action, prev_action, tag):
+                # Check self
                 if action.tag == tag:
                     return action
-                else:
-                    # Search super
-                    s = action.super_action
-                    if prev_action is not None and s is not None:  # Non root
-                        if s != prev_action:  # Not from super
-                            action = search(s, action, tag)
-                    # Search sub
-                    for s in action.sub_actions:
-                        if s != prev_action:  # Not from sub
-                            action = search(s, action, tag)
-                    if action.tag != tag:
-                        raise ValueError(f'No global action with tag {tag} in path {path}')
+                # Search super
+                s = action.sup_action
+                if s is not None:  # Non root
+                    if s != prev_action:  # Not from super
+                        a = search(s, action, tag)
+                        if a is not None and a.tag == tag:
+                            return a
+                # Search sub
+                for s in action.sub_actions:
+                    if s != prev_action:  # Not from sub
+                        a = search(s, action, tag)
+                        if a is not None and a.tag == tag:
+                            return a
+                # Not found
+                return None
 
-            a = search(a, None, loc)  # Global to Local
+            a = search(a, None, tag)  # Global to Local
+            if a is None:
+                raise ValueError(f'No global action with tag {tag} in path {path}')
             a = a.search_action(sup + '~~' + sub)  # Search Local
         return a
 
@@ -292,7 +298,7 @@ class Action:
         routes = {} if routes is None else routes
         if prev_action is None:  # This action is the root node
             if route in routes:
-                logging.warning(f'Routing "{route}" conflict! Set tags to actions'
+                logging.warning(f'Routing "{route}" conflict! Set tags to actions '
                                 f'to resolve it: {routes[route]} {self}')
             routes[route] = self
             if self.sup_action is not None:
@@ -302,7 +308,7 @@ class Action:
         elif prev_action.sup_action == self:  # This action is the super action of previous
             route = sep.join([def_tag, route])
             if route in routes:
-                logging.warning(f'Routing "{route}" conflict! Set tags to actions'
+                logging.warning(f'Routing "{route}" conflict! Set tags to actions '
                                 f'to resolve it: {routes[route]} {self}')
             routes[route] = self
             if self.sup_action is not None:
@@ -313,7 +319,7 @@ class Action:
         else:  # This action is a sub action of previous
             route = sep.join([route, def_tag if self.tag is None else self.tag])
             if route in routes:
-                logging.warning(f'Routing "{route}" conflict! Set tags to actions'
+                logging.warning(f'Routing "{route}" conflict! Set tags to actions '
                                 f'to resolve it: {routes[route]} {self}')
             routes[route] = self
             for s in self.sub_actions:

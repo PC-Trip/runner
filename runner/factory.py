@@ -75,6 +75,7 @@ class Factory:
             'Equation': Equation,
             'SE': Equation,
             'Value': Value,
+            'SV': Value,
             'SetFileRegex': SetFileRegex,
             'SR': SetFileRegex,
             'GetFileJson': GetFileJson,
