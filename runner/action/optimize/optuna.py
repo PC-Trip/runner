@@ -317,15 +317,100 @@ class Optuna(Optimize):
                 raise ValueError('Optuna works with Continuous, Discrete '
                                  'and Categorical variables only!')
 
-    def create_study(self):
+    def initialize_sampler(self):
+        sampler = None
         if self.sampler is not None:
+            if self.sampler == 'PartialFixedSampler':  # Initialize base sampler
+                if 'base_sampler' in self.sampler_kwargs:
+                    bs_str = self.sampler_kwargs['base_sampler']
+                else:
+                    logging.warning('base_sampler is not in sampler_kwargs '
+                                    '- using RandomSampler')
+                    bs_str = 'RandomSampler'
+                if 'base_sampler_kwargs' in self.sampler_kwargs:
+                    ks = self.sampler_kwargs.pop('base_sampler_kwargs')
+                else:
+                    logging.warning(f'base_sampler_kwargs is not in sampler_kwargs '
+                                    f'- using default parameters of {bs_str}')
+                    ks = {}
+                bs = getattr(optuna.samplers, bs_str)(**ks)
+                self.sampler_kwargs['base_sampler'] = bs
+                if 'fixed_params' in self.sampler_kwargs:
+                    ps = self.sampler_kwargs['fixed_params']
+                else:
+                    logging.warning(f'fixed_params is not in sampler_kwargs '
+                                    f'- sampling with {bs_str} without restrictions')
+                    ps = self.sampler_kwargs.setdefault('fixed_params', {})
+                s = None  # study
+                for k in list(ps.keys()):
+                    v = ps[k]
+                    if v is None:
+                        if s is None:
+                            if len(self.objectives) == 1:
+                                direction = list(self.objectives.values())[0]
+                                s = optuna.create_study(storage=self.storage,
+                                                        study_name=self.study,
+                                                        load_if_exists=True,
+                                                        direction=direction)
+                            elif len(self.objectives) > 1:  # Multi-objective
+                                directions = list(self.objectives.values())
+                                s = optuna.create_study(storage=self.storage,
+                                                        study_name=self.study,
+                                                        load_if_exists=True,
+                                                        directions=directions)
+                            else:
+                                raise ValueError(f'No objectives: {self.objectives}!')
+                        if len(s.trials) > 0:
+                            if not s._is_multi_objective:
+                                t = s.best_trial
+                            else:
+                                t = s.best_trials[0]
+                            b = t.params[k]
+                            logging.info(f'Fixing parameter "{k}" with best value {b} '
+                                         f'from trial {t.number}')
+                            ps[k] = b
+                        else:
+                            logging.info(f'No trials in study {s.study_name} '
+                                         f'- removing parameter {k} from fixed_params')
+                            ps.pop(k)
+                    else:
+                        logging.info(f'Fixing parameter "{k}" with value {v}')
             sampler = getattr(optuna.samplers, self.sampler)(**self.sampler_kwargs)
-        else:
-            sampler = None
+            if self.sampler == 'PartialFixedSampler':
+                self.sampler_kwargs['base_sampler'] = bs_str
+                self.sampler_kwargs['base_sampler_kwargs'] = ks
+        return sampler
+
+    def initialize_pruner(self):
+        pruner = None
         if self.pruner is not None:
+            if self.pruner == 'PatientPruner':  # Initialize wrapped sampler
+                if 'wrapped_pruner' in self.pruner_kwargs:
+                    wp_str = self.pruner_kwargs['wrapped_pruner']
+                else:
+                    logging.warning('wrapped_pruner is not in pruner_kwargs '
+                                    '- using None pruner')
+                    wp_str = None
+                if 'wrapped_pruner_kwargs' in self.pruner_kwargs:
+                    ks = self.pruner_kwargs.pop('wrapped_pruner_kwargs')
+                else:
+                    logging.warning(f'wrapped_pruner_kwargs is not in pruner_kwargs '
+                                    f'- using default parameters of {wp_str}')
+                    ks = {}
+                if wp_str is not None:
+                    wp = getattr(optuna.pruners, wp_str)(**ks)
+                else:
+                    wp = None
+                self.pruner_kwargs['wrapped_pruner'] = wp
             pruner = getattr(optuna.pruners, self.pruner)(**self.pruner_kwargs)
-        else:
-            pruner = None
+            if self.pruner == 'PatientPruner':
+                self.pruner_kwargs['wrapped_pruner'] = wp_str
+                self.pruner_kwargs['wrapped_pruner_kwargs'] = ks
+        return pruner
+
+    def create_study(self):
+        sampler = self.initialize_sampler()
+        pruner = self.initialize_pruner()
         if self.do_create_study:
             if self.do_read_study:
                 load_if_exists = True  # Raise exception if exists

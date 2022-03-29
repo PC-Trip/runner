@@ -1,0 +1,39 @@
+metadata:
+  log_level: DEBUG
+  log_path: null
+data:
+  class: Optuna
+  n_trials: 5
+  work_path: work
+  storage: sqlite:///work.db
+  study: fixed
+  objectives:
+    ~~.y:  minimize
+  copies: [input.txt, script.py]
+  sampler: PartialFixedSampler
+  sampler_kwargs:
+    fixed_params:
+      ~~.x1: 0
+    base_sampler: RandomSampler
+    base_sampler_kwargs:
+      seed: 42
+  sub_actions:
+    - class: F
+      tag: x1
+      sub_actions:
+        - {class: SC, low: -2, high: 2}
+    - class: F
+      tag: x2
+      sub_actions:
+        - {class: SC, low: -3, high: 3}
+    - {class: GF, template: "x1 $.~~.x1$\nx2 $.~~.x2$", output_path: input.txt}
+    - class: P
+      subprocess_kwargs:
+        args: [python, script.py]
+    - class: Feature
+      tag: y
+      sub_actions:
+        - class: SR
+          pattern: "-?\\d+\\.\\d+"
+          input_path: output.txt
+          value_type: float
