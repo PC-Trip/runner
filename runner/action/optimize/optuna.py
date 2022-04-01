@@ -61,8 +61,10 @@ class Optuna(Optimize):
                  parameters=None, objectives=None, constraints=None,
                  sampler=None, sampler_kwargs=None,
                  pruner=None, pruner_kwargs=None,
-                 do_results=None, do_csv=None, do_excel=None, do_plot=None,
-                 do_plot_pareto=None, do_plot_other=None,
+                 do_results=None, do_csv=None, do_excel=None,
+                 do_plot=None, do_plot_pareto=None, do_plot_history=None,
+                 do_plot_slice=None, do_plot_contour=None, do_plot_parallel=None,
+                 do_plot_edf=None, do_plot_importance=None,
                  results_color_key=None,
                  results_color_scale=None,
                  do_results_color_reverse=None,
@@ -96,9 +98,14 @@ class Optuna(Optimize):
         self.do_results = True if do_results is None else do_results
         self.do_csv = True if do_csv is None else do_csv
         self.do_excel = False if do_excel is None else do_excel
-        self.do_plot = False if do_plot is None else do_plot
-        self.do_plot_pareto = True if do_plot_pareto is None else do_plot_pareto
-        self.do_plot_other = True if do_plot_other is None else do_plot_other
+        self.do_plot = True if do_plot is None else do_plot
+        self.do_plot_pareto = False if do_plot_pareto is None else do_plot_pareto
+        self.do_plot_history = False if do_plot_history is None else do_plot_history
+        self.do_plot_slice = False if do_plot_slice is None else do_plot_slice
+        self.do_plot_contour = False if do_plot_contour is None else do_plot_contour
+        self.do_plot_parallel = False if do_plot_parallel is None else do_plot_parallel
+        self.do_plot_edf = False if do_plot_edf is None else do_plot_edf
+        self.do_plot_importance = False if do_plot_importance is None else do_plot_importance
         self.results_color_key = results_color_key
         self.results_color_scale = 'Viridis' if results_color_scale is None else results_color_scale
         self.do_results_reverse_color = False if do_results_color_reverse is None else do_results_color_reverse
@@ -557,26 +564,31 @@ class Optuna(Optimize):
                         fig.write_html(p / f"pareto_front-{'-'.join(f'{n}-{d}' for n, d in zip(c_ns, c_ds))}.html")
                 except Exception as e:
                     print(e)
-        if self.do_plot_other:
-            for i, (n, d) in enumerate(self.objectives.items()):
-                try:  # required plotly
+        for i, (n, d) in enumerate(self.objectives.items()):
+            try:  # required plotly
+                if self.do_plot_history:
                     optuna.visualization.plot_optimization_history(
                         study, target_name=n, target=lambda x: x.values[i]).write_html(
                         p / f"optimization_history-{d}-{n}.html")
+                if self.do_plot_slice:
                     optuna.visualization.plot_slice(
                         study, target_name=n, target=lambda x: x.values[i]).write_html(
                         p / f"slice-{d}-{n}.html")
+                if self.do_plot_contour:
                     optuna.visualization.plot_contour(
                         study, target_name=n, target=lambda x: x.values[i]).write_html(
                         p / f"contour-{d}-{n}.html")
+                if self.do_plot_parallel:
                     optuna.visualization.plot_parallel_coordinate(
                         study, target_name=n, target=lambda x: x.values[i]).write_html(
                         p / f"parallel_coordinate-{d}-{n}.html")
+                if self.do_plot_edf:
                     optuna.visualization.plot_edf(
                         study, target_name=n, target=lambda x: x.values[i]).write_html(
                         p / f"edf-{d}-{n}.html")
-                except Exception as e:
-                    print(e)
+            except Exception as e:
+                print(e)
+            if self.do_plot_importance:
                 try:  # required sklearn
                     optuna.visualization.plot_param_importances(
                         study, target_name=n, target=lambda x: x.values[i]).write_html(
