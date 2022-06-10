@@ -18,7 +18,7 @@ States https://optuna.readthedocs.io/en/stable/reference/generated/optuna.trial.
 """
 from pathlib import Path
 import shutil
-import uuid
+from uuid import uuid4
 import logging
 import os
 from itertools import combinations
@@ -69,14 +69,17 @@ class Optuna(Optimize):
                  results_color_scale=None,
                  do_results_color_reverse=None,
                  results_hover_keys=None,
-                 do_optimize=None, n_trials=1,
-                 do_update=None, trial=None, do_sub_call=None,
+                 do_optimize=None, n_trials=None,
+                 do_update=None, trial=None, do_sub_call=None, do_reproduce=None,
+                 do_results_only=None,
                  **kwargs):
         super().__init__(**kwargs)
         # Study
-        self.storage = storage
-        self.study = str(uuid.uuid4()) if study is None else study
-        self.work_path = Path(str(uuid.uuid4())).resolve() if work_path is None else Path(work_path).resolve()
+        self.storage = os.getenv('OPTUNA_URL') if storage is None else storage
+        self.study = os.getenv('OPTUNA_STUDY', str(uuid4())) if study is None else study
+        if work_path is None:
+            work_path = os.getenv('OPTUNA_WORKDIR', str(uuid4()))
+        self.work_path = Path(work_path).resolve()
         self.study_path = (self.work_path / self.study).resolve()
         self.do_create_study = True if do_create_study is None else do_create_study
         self.do_read_study = True if do_read_study is None else do_read_study
@@ -85,7 +88,9 @@ class Optuna(Optimize):
         self.links = [] if links is None else [Path(x) for x in links]
         self.do_clean_work = False if do_clean_work is None else do_clean_work
         self.do_clean_study = False if do_clean_study is None else do_clean_study
-        self.do_clean_trial = False if do_clean_trial is None else do_clean_trial
+        if do_clean_trial is None:
+            do_clean_trial = int(os.getenv('OPTUNA_CLEAN_TRIAL', '0'))
+        self.do_clean_trial = do_clean_trial
         # Optimizer
         self.sampler = sampler
         self.sampler_kwargs = {} if sampler_kwargs is None else sampler_kwargs
@@ -95,28 +100,50 @@ class Optuna(Optimize):
         self.objectives = {} if objectives is None else objectives
         self.constraints = [] if constraints is None else constraints
         # Results
-        self.do_results = True if do_results is None else do_results
+        if do_results is None:
+            do_results = int(os.getenv('OPTUNA_RESULTS', '0'))
+        self.do_results = do_results
         self.do_csv = True if do_csv is None else do_csv
         self.do_excel = False if do_excel is None else do_excel
-        self.do_plot = True if do_plot is None else do_plot
-        self.do_plot_pareto = False if do_plot_pareto is None else do_plot_pareto
-        self.do_plot_history = False if do_plot_history is None else do_plot_history
-        self.do_plot_slice = False if do_plot_slice is None else do_plot_slice
-        self.do_plot_contour = False if do_plot_contour is None else do_plot_contour
-        self.do_plot_parallel = False if do_plot_parallel is None else do_plot_parallel
-        self.do_plot_edf = False if do_plot_edf is None else do_plot_edf
-        self.do_plot_importance = False if do_plot_importance is None else do_plot_importance
+        do_plot = int(os.getenv('OPTUNA_PLOT', '0')) if do_plot is None else do_plot
+        self.do_plot = do_plot
+        self.do_plot_pareto = True if do_plot_pareto is None else do_plot_pareto
+        self.do_plot_history = True if do_plot_history is None else do_plot_history
+        self.do_plot_slice = True if do_plot_slice is None else do_plot_slice
+        self.do_plot_contour = True if do_plot_contour is None else do_plot_contour
+        self.do_plot_parallel = True if do_plot_parallel is None else do_plot_parallel
+        self.do_plot_edf = True if do_plot_edf is None else do_plot_edf
+        self.do_plot_importance = True if do_plot_importance is None else do_plot_importance
         self.results_color_key = results_color_key
         self.results_color_scale = 'Viridis' if results_color_scale is None else results_color_scale
         self.do_results_reverse_color = False if do_results_color_reverse is None else do_results_color_reverse
         self.results_hover_keys = [] if results_hover_keys is None else results_hover_keys
         # Optimize
         self.do_optimize = True if do_optimize is None else do_optimize
+        if n_trials is None:
+            n_trials = os.getenv('OPTUNA_TRIALS', '')
+            n_trials = int(n_trials) if n_trials.strip() else None
         self.n_trials = n_trials
         # Update
         self.do_update = False if do_update is None else do_update
         self.trial = trial
         self.do_sub_call = False if do_sub_call is None else do_sub_call
+        # Reproduce
+        if do_reproduce is None:
+            do_reproduce = int(os.getenv('OPTUNA_REPRODUCE', '0'))
+        self.do_reproduce = do_reproduce
+        if self.do_reproduce:
+            self.do_create_study, self.do_read_study = False, True
+            self.do_optimize, self.do_update, self.do_sub_call = False, True, True
+            self.do_results = False
+        # Results only
+        if do_results_only is None:
+            do_results_only = int(os.getenv('OPTUNA_RESULTS_ONLY', '0'))
+        self.do_results_only = do_results_only
+        if self.do_results_only:
+            self.do_create_study, self.do_read_study = False, True
+            self.do_optimize, self.do_update, self.do_sub_call = False, False, False
+            self.do_results, self.do_reproduce = True, False
         # Common
         self.variable2template = None  # Variable to template
         self.feature2route = None  # Feature to route
@@ -297,10 +324,12 @@ class Optuna(Optimize):
                 if kind == 'suggested':
                     if isinstance(t.low, int) and isinstance(t.high, int):
                         s = (t.high - t.low) // (t.num - 1) if t.num != 1 else 1
-                        value = trial.suggest_int(name=r, low=t.low, high=t.high, step=s)
+                        value = trial.suggest_int(name=r, low=t.low, high=t.high,
+                                                  step=s)
                     else:
                         s = (t.high - t.low) / (t.num - 1) if t.num != 1 else 1
-                        value = trial.suggest_float(name=r, low=t.low, high=t.high, step=s)
+                        value = trial.suggest_float(name=r, low=t.low, high=t.high,
+                                                    step=s)
                     v.low, v.high, v.num = value, value, 1
                 elif kind == 'optimized':
                     value = trial.user_attrs[f'features_{r}']
@@ -546,7 +575,8 @@ class Optuna(Optimize):
                             labels=labels)
                         if color is not None:
                             fig.layout.coloraxis.colorbar.title = color
-                        fig.write_html(p / f"pareto_front-{'-'.join(f'{n}-{d}' for n, d in zip(c_ns, c_ds))}.html")
+                        fig.write_html(
+                            p / f"pareto_front-{'-'.join(f'{n}-{d}' for n, d in zip(c_ns, c_ds))}.html")
                     for c in combinations(range(n), 3):
                         c_vs = [old2new[f'values_{x}'] for x in c]
                         c_ns = [ns[x] for x in c]
@@ -561,7 +591,8 @@ class Optuna(Optimize):
                             labels=labels)
                         if color is not None:
                             fig.layout.coloraxis.colorbar.title = color
-                        fig.write_html(p / f"pareto_front-{'-'.join(f'{n}-{d}' for n, d in zip(c_ns, c_ds))}.html")
+                        fig.write_html(
+                            p / f"pareto_front-{'-'.join(f'{n}-{d}' for n, d in zip(c_ns, c_ds))}.html")
                 except Exception as e:
                     print(e)
         for i, (n, d) in enumerate(self.objectives.items()):
